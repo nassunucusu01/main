@@ -1,0 +1,1 @@
+"""KuantLab application package."""

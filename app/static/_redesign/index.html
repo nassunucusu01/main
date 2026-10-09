@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>KuantLab · Hoş Geldiniz — Ücretsiz LLM Kuantizasyonu (GGUF)</title>
+<meta name="description" content="Qwen, Llama, DeepSeek, Mistral, Gemma gibi açık kaynak dil modellerini ücretsiz olarak kuantize edin ve tek bir .gguf dosyası olarak indirin. Kuantizasyonun nasıl çalıştığını, hangi şirketlerin kullandığını ve hangi seviyeyi seçmeniz gerektiğini öğrenin.">
+<meta name="theme-color" content="#03050b">
+<meta property="og:title" content="KuantLab — Yapay zekâyı küçültün, kendi bilgisayarınızda çalıştırın">
+<meta property="og:description" content="Açık kaynak dil modellerini GGUF olarak kuantize edin. Yöntemler, şirketler, hesaplayıcı ve interaktif laboratuvar.">
+<meta property="og:type" content="website">
+<link rel="icon" href="img/logo.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/inter-tight-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/fonts.css">
+<link rel="stylesheet" href="css/style.css">
+<script>document.documentElement.classList.add("js")</script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-logo" viewBox="0 0 24 24"><path d="M3 16c2.6 0 2.6-9 5.2-9s2.6 11 5.2 11 2.6-7 5.4-7" opacity=".38"/><path d="M3 17.5h4V13h4V7.5h3.5v8H18V11h3"/></symbol>
+  <symbol id="i-chip" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-arrow-ur" viewBox="0 0 24 24"><path d="M7 17 17 7M8 7h9v9"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+  <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 8h16M4 16h16"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20 7 4" fill="currentColor"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" fill="currentColor"/><rect x="14" y="4" width="4" height="16" fill="currentColor"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-ext" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14 21 3"/></symbol>
+  <symbol id="i-plus-sm" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></symbol>
+  <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 2h6M10 2v6L4 19a2 2 0 0 0 1.8 3h12.4A2 2 0 0 0 20 19l-6-11V2"/><path d="M7 15h10"/></symbol>
+</svg>
+
+<div class="progress" id="scrollBar" aria-hidden="true"></div>
+
+<!-- ============ ÜST MENÜ ============ -->
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="KuantLab — sayfanın başı">
+    <span class="mark"><svg class="i"><use href="#i-logo"/></svg></span><span class="brand-name">KuantLab</span>
+  </a>
+  <nav class="nav-links" aria-label="Ana bölümler">
+    <a href="#basla">Başla</a>
+    <a href="#nedir">Nedir?</a>
+    <a href="#lab">Laboratuvar</a>
+    <a href="#yontemler">Yöntemler</a>
+    <a href="#sirketler">Şirketler</a>
+    <a href="#hesapla">Hesaplayıcı</a>
+    <a href="#sss">SSS</a>
+  </nav>
+  <div class="nav-right">
+    <span class="engine-pill" id="engine"><span class="dot"></span><span id="engineText">Sunucu kontrol ediliyor…</span></span>
+    <button class="menu-btn" id="menuBtn" type="button" aria-label="Tüm bölümler" aria-expanded="false" aria-controls="sitemap"><svg class="i"><use href="#i-menu"/></svg></button>
+  </div>
+  <div class="sitemap" id="sitemap" hidden>
+    <div class="sm-col">
+      <b>Araç</b>
+      <a href="#basla">Modelini kuantize et</a>
+      <a href="#nedir">Kuantizasyon nedir?</a>
+      <a href="#galeri">Görsel özet</a>
+      <a href="#lab">Laboratuvar</a>
+    </div>
+    <div class="sm-col">
+      <b>Teknik</b>
+      <a href="#nasil">Nasıl çalışır?</a>
+      <a href="#formatlar">Sayı biçimleri</a>
+      <a href="#yontemler">Yöntemler</a>
+      <a href="#seviyeler">Seviyeler (Q2…Q8)</a>
+      <a href="#hesapla">Bellek hesaplayıcı</a>
+    </div>
+    <div class="sm-col">
+      <b>Sektör</b>
+      <a href="#onem">Neden önemli?</a>
+      <a href="#sirketler">Şirketler</a>
+      <a href="#turkiye">Türkiye</a>
+      <a href="#zaman">Zaman çizelgesi</a>
+      <a href="#araclar">Açık kaynak araçlar</a>
+    </div>
+    <div class="sm-col">
+      <b>Yardım</b>
+      <a href="#kullan">Nasıl kullanırım?</a>
+      <a href="#sss">Sık sorulan sorular</a>
+      <a href="#sozluk">Sözlük</a>
+      <a href="#kaynaklar">Kaynaklar</a>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+<!-- ============ KARŞILAMA ============ -->
+<section class="hero-wrap" aria-label="Karşılama">
+  <div class="hero" id="top">
+    <canvas class="hero-cv back" id="heroBack" aria-hidden="true"></canvas>
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="hero-grain" aria-hidden="true"></div>
+
+    <div class="hero-top">
+      <span class="eyebrow">(GGUF · ÜCRETSİZ · AÇIK KAYNAK)</span>
+      <span class="eyebrow hero-bits" aria-hidden="true">(HASSASİYET <b id="heroBits">16 BİT</b>)</span>
+    </div>
+
+    <h1 class="hero-title">H<span class="off">o</span>ş Geldiniz</h1>
+
+    <canvas class="hero-cv front" id="heroFront" aria-hidden="true"></canvas>
+
+    <div class="hero-bottom">
+      <div class="hb-left">
+        <p class="hero-label"><span class="lbl">(<b>K</b>UANTLAB)</span></p>
+        <p class="hero-sub"><b>Qwen, Llama, DeepSeek</b> ve daha fazlasını küçültün — kendi bilgisayarınızda çalıştırın.</p>
+        <div class="hero-cta">
+          <a class="pill white" href="#basla">Let's Start <svg class="i"><use href="#i-arrow-ur"/></svg></a>
+          <div class="avatars" aria-label="Otomatik tanınan model aileleri">
+            <span class="av"><img src="img/brands/qwen.svg" alt=""></span>
+            <span class="av"><img src="img/brands/meta.svg" alt=""></span>
+            <span class="av"><img src="img/brands/deepseek.svg" alt=""></span>
+            <span class="av"><img src="img/brands/mistral.svg" alt=""></span>
+            <span class="av more">+16</span>
+          </div>
+          <p class="av-text"><b>20</b> model ailesi<br>otomatik tanınır</p>
+        </div>
+      </div>
+      <div class="hb-right">
+        <a class="thumb" href="#lab" aria-label="Laboratuvara git"><canvas id="thumbA" aria-hidden="true"></canvas><span>Sinyal</span></a>
+        <a class="thumb" href="#galeri" aria-label="Görsel özete git"><canvas id="thumbB" aria-hidden="true"></canvas><span>Matris</span></a>
+        <a class="stat-card" href="#nedir">
+          <span class="sc-top"><span>(ORTALAMA)</span><svg class="i"><use href="#i-arrow-ur"/></svg></span>
+          <span class="sc-num"><b data-count="4.9" data-dec="1">4,9</b><small>bit / ağırlık</small></span>
+          <span class="sc-txt">16 bitten <b>Q4_K_M</b>'e: dosya ≈ 3,3× küçülür.</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ARAÇ ============ -->
+<section class="sec tool-sec" id="basla" aria-labelledby="toolTitle">
+  <div class="wrap tool-grid">
+    <aside class="tool-aside">
+      <span class="lbl rv">(<b>B</b>AŞLA)</span>
+      <h2 class="statement sm rv" id="toolTitle">Modelinizi getirin. <em>GGUF</em>'unuzu alın.</h2>
+      <ol class="steps rv">
+        <li><b>01</b><span>Dosyanızı ekleyin ya da bir <span class="fmt">model adı</span> yazın.</span></li>
+        <li><b>02</b><span>Kuantizasyon seviyesini seçin.</span></li>
+        <li><b>03</b><span><i>Let's Start</i>'a basın, ilerlemeyi izleyin, <i>İndir</i>'e tıklayın.</span></li>
+      </ol>
+      <div class="aside-note rv">
+        <svg class="i"><use href="#i-shield"/></svg>
+        <p>Yüklediğiniz kaynak dosyalar işlem bitince silinir; çıktı 3 saat indirilebilir. Hugging Face anahtarınız yalnızca indirme için kullanılır, saklanmaz.</p>
+      </div>
+    </aside>
+
+    <div class="tool-card rv" id="toolCard">
+      <h3 class="tool-h">Kuantizasyon için modelinizi yükleyin</h3>
+      <p class="intro">Kuantizasyon için modelinizin lütfen
+        <span class="fmt">.safetensors</span><span class="fmt">.bin (PyTorch)</span><span class="fmt">.gguf (F16 / BF16 / F32)</span>
+        formatındaki dosyasını — ya da model klasörünü içeren <span class="fmt">.zip</span><span class="fmt">.tar.gz</span> arşivini — buraya sürükleyin, yapıştırın veya seçin.
+        Klasör halinde yüklüyorsanız <span class="fmt">config.json</span> ve tokenizer dosyalarını da ekleyin.</p>
+
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Dosya seç">
+        <div class="big-ico"><svg class="i"><use href="#i-upload"/></svg></div>
+        <p><strong>Dosyanızı buraya bırakın</strong> veya <strong>Ctrl / ⌘ + V</strong> ile yapıştırın</p>
+        <p>Desteklenen: .safetensors · .bin · .gguf · .zip · .tar.gz · .json · .model</p>
+        <button class="attach" type="button" id="attachBtn"><span class="plus"><svg class="i"><use href="#i-plus"/></svg></span>Dosya ekle</button>
+        <input type="file" id="fileInput" multiple hidden
+               accept=".gguf,.safetensors,.bin,.json,.model,.txt,.tiktoken,.jinja,.zip,.tar,.gz,.tgz">
+      </div>
+      <ul class="files" id="fileList"></ul>
+
+      <div class="or">veya</div>
+
+      <label class="flbl" for="modelInput">Model adını yazın <small>— model Hugging Face'ten otomatik getirilir ve GGUF olarak verilir</small></label>
+      <div class="input">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input id="modelInput" type="text" autocomplete="off" spellcheck="false"
+               placeholder="örn. Qwen/Qwen2.5-1.5B-Instruct  ·  deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B">
+      </div>
+      <div class="preview" id="preview"></div>
+
+      <div class="row-gap">
+        <span class="flbl">Kuantizasyon seviyesi <small>— bit sayısı azaldıkça dosya küçülür, kalite biraz düşer</small></span>
+        <div class="quants" id="quants"></div>
+        <p class="quants-note">Emin değilseniz <b>Q4_K_M</b> seçin. Seviyeleri ayrıntılı karşılaştırmak için <a href="#seviyeler">tabloya</a> bakın.</p>
+      </div>
+
+      <details class="adv">
+        <summary>Gelişmiş: Erişim izni gerektiren modeller (ör. Meta Llama) için Hugging Face token</summary>
+        <div class="input">
+          <svg class="i"><use href="#i-key"/></svg>
+          <input id="tokenInput" type="password" autocomplete="off" placeholder="hf_xxx… (yalnızca bu işlem için kullanılır, saklanmaz)">
+        </div>
+      </details>
+
+      <button class="start" id="startBtn" type="button">Let's Start <svg class="i"><use href="#i-arrow"/></svg></button>
+      <div class="hint" id="hint"></div>
+
+      <div class="job" id="job" aria-live="polite">
+        <div class="job-head">
+          <div class="logo-slot" id="jobLogo"></div>
+          <div class="job-title">
+            <div class="job-name" id="jobName">—</div>
+            <div class="job-sub" id="jobSub">GGUF</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar"><div class="fill" id="fill"></div></div>
+          <div class="pct" id="pct">0%</div>
+        </div>
+        <div class="job-meta">
+          <span class="stage" id="stage">Başlatılıyor…</span>
+          <span class="eta" id="eta"></span>
+        </div>
+        <div class="job-err" id="jobErr"></div>
+        <button class="again retry" id="retryBtn" type="button" style="display:none;opacity:1">Tekrar dene</button>
+        <div class="done">
+          <div class="check-wrap">
+            <span class="ring"></span><span class="ring r2"></span>
+            <svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="41"/><path d="M28 47 l12 12 l24 -26"/></svg>
+          </div>
+          <h3>İşlem bitti!</h3>
+          <div class="meta" id="doneMeta"></div>
+          <button class="dl" id="dlBtn" type="button"><svg class="i"><use href="#i-download"/></svg><span>İndir</span></button>
+          <button class="again" id="againBtn" type="button">Yeni bir model kuantize et</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ KUANTİZASYON NEDİR ============ -->
+<section class="sec about" id="nedir" aria-labelledby="aboutTitle">
+  <div class="wrap">
+    <div class="about-grid">
+      <span class="lbl rv">(<b>N</b>EDİR<b>?</b>)</span>
+      <div>
+        <h2 class="statement rv" id="aboutTitle">Kuantizasyon, bir yapay zekâ modelinin <em>milyarlarca sayısını</em> 16 bitten <em>4 bite</em> indirir: dosya üçte birine küçülür, kalite çoğu zaman korunur.</h2>
+        <div class="about-row">
+          <div class="stats-2">
+            <div class="st rv"><b data-count="3.3" data-dec="1" data-suffix="×">3,3×</b><span>daha küçük dosya<small>Qwen2.5-7B: 15,24 → 4,68 GB (Q4_K_M)</small></span></div>
+            <div class="st rv"><b data-count="4.9" data-dec="1">4,9</b><span>bit / ağırlık<small>Q4_K_M ortalaması; ölçekler dâhil</small></span></div>
+          </div>
+          <div class="about-text rv">
+            <p>Bir dil modeli milyarlarca <b>ağırlık</b> (parametre) sayısından oluşur. Eğitimden çıkan bu sayılar çoğunlukla 16 bit ile saklanır; yani her biri 2 bayttır. 7 milyar parametreli bir model bu yüzden yaklaşık <b>14–15 GB</b> eder ve sıradan bir bilgisayarın belleğine sığmaz.</p>
+            <p>Kuantizasyon (nicemleme), bu sayıları <b>8, 6, 5, 4 hatta 2 bitlik</b> basamaklara yuvarlayarak saklar. Hata küçüktür, kazanç büyüktür: daha az bellek, daha hızlı yanıt, daha düşük maliyet.</p>
+            <a class="pill ghost" href="#nasil">Nasıl çalışır? <svg class="i"><use href="#i-arrow-ur"/></svg></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ GALERİ ============ -->
+<section class="sec gallery" id="galeri" aria-label="Görsel özet">
+  <div class="wrap">
+    <div class="gal">
+      <figure class="gcard g1 rv">
+        <div class="gview"><canvas id="gal1" aria-label="Tek bir sayının 16 basamağa yuvarlanması"></canvas></div>
+        <figcaption><span>01 — Tek bir sayı</span><small>Bir sayı, 4 bitte yalnızca 16 basamaktan en yakınına oturur; aradaki fark kuantizasyon hatasıdır.</small></figcaption>
+      </figure>
+      <figure class="gcard g2 rv">
+        <div class="gview tall"><canvas id="gal2" aria-label="Ağırlık matrisi: 16 bit, 4 bit ve 2 bit"></canvas></div>
+        <figcaption><span>02 — Ağırlık matrisi</span><small>Aynı matris 16 bit, 4 bit ve 2 bitte. Ayrıntı azalır, desen büyük ölçüde kalır.</small></figcaption>
+      </figure>
+      <figure class="gcard g3 rv">
+        <div class="gview"><div class="gbars" id="gal3"></div></div>
+        <figcaption><span>03 — Bellek</span><small>Qwen2.5-7B için gerçek GGUF dosya boyutları.</small></figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LABORATUVAR ============ -->
+<section class="sec lab" id="lab" aria-labelledby="labTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>L</b>ABORATUVAR)</span>
+      <div>
+        <h2 class="h2 rv" id="labTitle">Kuantizasyonu <em>elinizle</em> deneyin</h2>
+        <p class="lede rv">Aşağıdaki sahne gerçek bir kuantizasyon hesabı yapar. Mavi çizgi 16 bitlik “özgün” sinyal, beyaz basamaklı çizgi seçtiğiniz bit sayısındaki karşılığıdır. Bit sayısını düşürdükçe basamaklar kabalaşır ve hata büyür. “Ağırlık matrisi” sekmesinde tek bir aykırı değerin tüm tensörü nasıl bozduğunu, blok ölçeğinin bunu nasıl çözdüğünü görürsünüz.</p>
+      </div>
+    </div>
+
+    <div class="labcard rv" id="labCard">
+      <canvas id="labCanvas" aria-label="Kuantizasyon laboratuvarı: özgün sinyal ve kuantize edilmiş sinyal"></canvas>
+      <button class="playbig" id="labPlay" type="button" aria-label="Animasyonu başlat"><svg class="i"><use href="#i-play"/></svg></button>
+      <div class="lab-hud">
+        <div class="seg" id="labTabs" role="group" aria-label="Görünüm">
+          <button type="button" data-mode="signal" aria-pressed="true">Sinyal</button>
+          <button type="button" data-mode="weights" aria-pressed="false">Ağırlık matrisi</button>
+        </div>
+        <label class="lab-slider"><span>Bit sayısı</span>
+          <input id="labBits" type="range" min="2" max="8" step="1" value="4" aria-describedby="labBitsOut">
+          <output id="labBitsOut">4 bit</output>
+        </label>
+        <label class="lab-check"><input type="checkbox" id="labBlock" checked><span>Blok bazlı ölçek <small>(32’lik)</small></span></label>
+        <div class="lab-reads">
+          <div><small>Seviye sayısı</small><b id="labLevels">16</b></div>
+          <div><small>Ortalama kare hata</small><b id="labMse">—</b></div>
+          <div><small>Sinyal/gürültü</small><b id="labSnr">—</b></div>
+        </div>
+        <button class="pp" id="labPause" type="button" aria-label="Duraklat"><svg class="i"><use href="#i-pause"/></svg></button>
+      </div>
+    </div>
+    <p class="fine rv" id="labNote">Seviye sayısı 2<sup>bit</sup>'tir; 4 bitte 16, 2 bitte yalnızca 4 basamak vardır. Gösterilen hata, bu sahnedeki sentetik veriye aittir; gerçek model kaybı için aşağıdaki <a href="#seviyeler">seviye tablosuna</a> bakın.</p>
+  </div>
+</section>
+
+<!-- ============ BÜYÜK YAZI + LOGO ŞERİDİ ============ -->
+<section class="sec bigtype-sec" aria-label="Özet söz">
+  <div class="wrap">
+    <p class="bigtype rv">Küçük <span class="btc c1" aria-hidden="true"></span> modeller,<br>büyük <span class="btc c2" aria-hidden="true"></span> fikirler</p>
+  </div>
+  <div class="mq" aria-hidden="true"><div class="mq-track" id="marquee"></div></div>
+</section>
+
+<!-- ============ NASIL ÇALIŞIR ============ -->
+<section class="sec how" id="nasil" aria-labelledby="howTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>N</b>ASIL ÇALIŞIR?)</span>
+      <div>
+        <h2 class="h2 rv" id="howTitle">Sekiz adımda <em>kuantizasyonun</em> mantığı</h2>
+        <p class="lede rv">Matematiğin tamamı iki satırdır; zorluk, hatayı en az yerde tutmaktır. Aşağıdaki başlıklar temel fikirden başlayıp bugün kullanılan ileri tekniklere kadar gider. Sayıların tamamı gerçek model dosyalarından ve resmî kaynaklardan alınmıştır.</p>
+      </div>
+    </div>
+
+    <div class="chapters">
+      <article class="chap rv">
+        <div class="chap-n">01</div>
+        <div class="chap-b">
+          <h3>Temel fikir: sayıyı daha az bitle saklamak</h3>
+          <p>Bir ağırlık 16 bitlik kayan noktalı sayı olarak 65.536 olası değerden biridir. Kuantizasyon bu değerleri sayı doğrusu üzerinde eşit aralıklı az sayıda “basamağa” yuvarlar. 4 bitte yalnızca 16 basamak vardır: her ağırlık için artık “en yakın basamak hangisi?” sorusunun cevabı (4 bit) ve basamakların aralığını belirleyen bir <b>ölçek</b> saklanır.</p>
+          <div class="formula"><code>q = clamp( round(x / s) + z , q_min , q_max )</code>   <i>← kuantize et</i><br><code>x̂ = s · ( q − z )</code>   <i>← geri aç (dequantize)</i></div>
+          <p class="small"><b>s</b> ölçek, <b>z</b> sıfır noktasıdır (simetrik kuantizasyonda 0). Yuvarlama hatası <code>x − x̂</code> en fazla <code>s/2</code>'dir; yani ölçek ne kadar küçükse hata o kadar küçüktür.</p>
+          <div class="worked" id="workedEx"></div>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">02</div>
+        <div class="chap-b">
+          <h3>Ölçek nerede tutulur? Tensör, kanal ve blok</h3>
+          <p>Tek bir ölçek tüm tensör için kullanılırsa, bir tek büyük değer ölçeği şişirir ve geri kalan binlerce ağırlığın arasındaki fark kaybolur. Bu yüzden modern yöntemler ağırlıkları küçük <b>bloklara</b> böler ve her bloğa kendi ölçeğini verir. Bedeli, ölçeklerin de yer kaplamasıdır: bu yüzden “Q4” dosyaları 4 değil yaklaşık 4,5–4,9 bit/ağırlık tutar.</p>
+          <div class="tbl-wrap"><table class="tbl" id="blockTbl"></table></div>
+          <p class="small">Blok yapıları llama.cpp'nin <code>ggml-common.h</code> dosyasından alınmıştır. “Bit/ağırlık” sütunu <code>bayt × 8 ÷ ağırlık</code> ile hesaplanır. Sahnede “Blok bazlı ölçek” kutusunu açıp kapatarak farkı <a href="#lab">laboratuvarda</a> görebilirsiniz.</p>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">03</div>
+        <div class="chap-b">
+          <h3>Aykırı değerler: büyük modellerin başına bela</h3>
+          <p><b>LLM.int8()</b> makalesi, belirli bir boyutun üzerindeki transformer'larda birkaç gizli boyutun diğerlerinden çok daha büyük değerler aldığını ve bu “sistematik aykırıların” model başarımını belirlediğini gösterdi. Bu tek tük değerler ölçeği bozar. Çözümler dört gruba ayrılır:</p>
+          <ul class="ticks">
+            <li><b>Ayrı işlemek:</b> aykırı sütunları 16 bitte bırakıp kalanı 8 bitte işlemek (LLM.int8()).</li>
+            <li><b>Zorluğu kaydırmak:</b> aktivasyonlardaki zorluğu kanal bazlı ölçekle ağırlıklara aktarmak (SmoothQuant).</li>
+            <li><b>Önemlileri korumak:</b> ağırlıkların küçük bir kısmını koruyan kanal ölçeği bulmak (AWQ).</li>
+            <li><b>Dağıtmak:</b> döndürme matrisleriyle aykırıları tüm boyutlara yaymak (QuaRot, SpinQuant).</li>
+          </ul>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">04</div>
+        <div class="chap-b">
+          <h3>Kalibrasyon ve önem matrisi</h3>
+          <p>GPTQ, AWQ ve llama.cpp'nin <code>imatrix</code> özelliği, modele küçük bir örnek metin kümesi okutarak hangi ağırlıkların çıktıyı daha çok etkilediğini ölçer ve hatayı en çok önemli yerlerde küçültür. 2 ve 3 bit gibi çok düşük seviyelerde bu bilgi olmadan kalite hızla çöker; bu yüzden llama.cpp bazı çok düşük bitli türleri önem matrisi olmadan üretmeyi reddeder. Unsloth, DeepSeek-R1'i 1,58 bit civarına indirirken önem matrisini ve hassas katmanları yüksek bitte tutma stratejisini birlikte kullandı.</p>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">05</div>
+        <div class="chap-b">
+          <h3>PTQ mu, QAT mi?</h3>
+          <p>Kuantizasyon modelin <b>eğitiminden sonra</b> (PTQ) ya da <b>eğitim sırasında</b> (QAT) yapılabilir. KuantLab'ın kullandığı GGUF türleri PTQ'dur: eğitim gerekmez, dakikalar içinde sonuç alırsınız.</p>
+          <div class="tbl-wrap"><table class="tbl cmp">
+            <thead><tr><th></th><th>PTQ (eğitim sonrası)</th><th>QAT (eğitim sırasında)</th></tr></thead>
+            <tbody>
+              <tr><td>Maliyet</td><td>Dakikalar–saatler; tek bilgisayar yeter</td><td>Ek eğitim bütçesi gerekir</td></tr>
+              <tr><td>4 bit ve altı kalite</td><td>İyi; 2–3 bitte belirgin düşüş</td><td>Genellikle daha yüksek</td></tr>
+              <tr><td>Kim yapabilir?</td><td>Herkes</td><td>Genelde model sahibi</td></tr>
+              <tr><td>Örnekler</td><td>GPTQ, AWQ, GGUF K-quant</td><td>Gemma 3 QAT, Apple cihaz içi model, Kimi K2 Thinking, Llama 3.2 QLoRA</td></tr>
+            </tbody>
+          </table></div>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">06</div>
+        <div class="chap-b">
+          <h3>Ağırlık mı, aktivasyon mu? W4A16, W8A8, W4A8</h3>
+          <p><b>Ağırlık-yalnız</b> kuantizasyon (ör. W4A16) belleği azaltır ve çıkarım bellek bant genişliği ile sınırlıyken hızlandırır. Hem ağırlık hem aktivasyon kuantize edilirse (W8A8, W4A8) matris çarpımının kendisi de düşük bitte yapılabilir. Meta'nın Llama 3.2 modelleri 4 bit grup bazlı ağırlık ile 8 bit dinamik aktivasyon kullanır; QuaRot ise ağırlık, aktivasyon ve KV önbelleğinin hepsini 4 bite indirir.</p>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">07</div>
+        <div class="chap-b">
+          <h3>KV önbelleği ve bağlam uzunluğu</h3>
+          <p>Uzun bir konuşmada bellek yalnızca ağırlıklara gitmez; her üretilen token için <b>anahtar-değer (KV) önbelleği</b> büyür. Bu önbellek de kuantize edilebilir: llama.cpp'de <code>-ctk</code> ve <code>-ctv</code> bayrakları <code>f16</code> (varsayılan), <code>q8_0</code>, <code>q4_0</code> gibi türleri kabul eder.</p>
+          <div class="formula"><code>KV bayt / token = 2 × katman × kv_başlık × başlık_boyutu × eleman_boyutu</code></div>
+          <p class="small">Llama-3.1-8B (32 katman, 8 KV başlığı, başlık boyutu 128) 16 bitte token başına <b>128 KiB</b> önbellek tutar: 8K bağlamda ≈ 1 GiB, 128K bağlamda ≈ 16 GiB. <a href="#hesapla">Hesaplayıcıda</a> kendi modelinizle deneyin.</p>
+        </div>
+      </article>
+
+      <article class="chap rv">
+        <div class="chap-n">08</div>
+        <div class="chap-b">
+          <h3>Kaybı nasıl ölçeriz?</h3>
+          <p><b>Perplexity</b> (düşük olan iyidir) modelin bir metni ne kadar “şaşırmadan” tahmin ettiğini ölçer; kuantize modelin özgün modele göre perplexity farkı hızlı bir göstergedir. <b>KL ıraksaması</b>, kuantize modelin olasılık dağılımının özgün modelden ne kadar saptığını gösterir. En güvenilir ölçü ise kendi göreviniz üzerindeki gerçek sonuçlardır: Cohere araştırmacılarının çok dilli çalışmasında insan değerlendirmesi, otomatik metriklerin gözden kaçırdığı kaybı ortaya çıkardı (Japoncada %16,0'a karşı %1,7).</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SAYI BİÇİMLERİ ============ -->
+<section class="sec fmts" id="formatlar" aria-labelledby="fmtTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>S</b>AYI BİÇİMLERİ)</span>
+      <div>
+        <h2 class="h2 rv" id="fmtTitle">Bir sayı <em>kaç bitte</em> nasıl saklanır?</h2>
+        <p class="lede rv">Kayan noktalı biçimler bitleri <i>işaret</i>, <i>üs</i> ve <i>mantis</i> arasında paylaştırır. Üs ne kadar genişse aralık o kadar büyüktür; mantis ne kadar genişse hassasiyet o kadar yüksektir. Düşük bitli biçimler ortak bir <i>ölçek</i> ile birlikte çalışır.</p>
+      </div>
+    </div>
+    <div class="legend rv" aria-hidden="true">
+      <span><i class="bit s"></i>işaret</span><span><i class="bit e"></i>üs</span><span><i class="bit m"></i>mantis</span><span><i class="bit v"></i>tam sayı değeri</span><span><i class="bit x"></i>blok ölçeği (8 bit)</span>
+    </div>
+    <div class="fmt-list" id="fmtList"></div>
+  </div>
+</section>
+
+<!-- ============ YÖNTEMLER ============ -->
+<section class="sec methods" id="yontemler" aria-labelledby="mTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>Y</b>ÖNTEMLER)</span>
+      <div>
+        <h2 class="h2 rv" id="mTitle">Kuantizasyon <em>yöntemleri</em> ve kim ne zaman geliştirdi</h2>
+        <p class="lede rv">Aşağıdaki kartlar, bugün kullanılan başlıca yöntemleri ve sayı biçimlerini kronolojik sırayla özetler. Her kartta ilgili makalenin (arXiv) ya da resmî belgenin bağlantısı vardır.</p>
+      </div>
+    </div>
+    <div class="toolbar rv">
+      <div class="chips" id="mFilter" role="group" aria-label="Yöntem türü"></div>
+      <span class="count" id="mCount"></span>
+    </div>
+    <div class="m-grid" id="mGrid"></div>
+  </div>
+</section>
+
+<!-- ============ SEVİYELER ============ -->
+<section class="sec levels" id="seviyeler" aria-labelledby="lvTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>S</b>EVİYELER)</span>
+      <div>
+        <h2 class="h2 rv" id="lvTitle">Hangi seviyeyi <em>seçmeliyim?</em></h2>
+        <p class="lede rv">Aşağıdaki değerler llama.cpp'nin kendi belgelerindeki ölçümlerden gelir (Llama-3-8B, 8,03 milyar parametre). Perplexity farkı özgün F16 modele göredir; küçük olan iyidir. Çoğu kullanıcı için ideal nokta <b>Q4_K_M</b>'dir: dosya yaklaşık üçte bire iner, kayıp çok küçük kalır.</p>
+      </div>
+    </div>
+    <div class="scatter-wrap rv">
+      <div class="scatter-head"><b>Boyut ve kalite</b><span>Yatay: dosya boyutu (GiB). Dikey: perplexity farkı (log ölçek; aşağısı daha iyi).</span></div>
+      <div id="scatter" class="scatter" role="img" aria-label="Kuantizasyon seviyelerinin boyut ve perplexity farkı grafiği"></div>
+    </div>
+    <div class="toolbar rv">
+      <div class="chips" id="lvFilter" role="group" aria-label="Seviye türü"></div>
+      <span class="count" id="lvNote"></span>
+    </div>
+    <div class="tbl-wrap rv"><div class="lv-table" id="lvTable" role="table" aria-label="Kuantizasyon seviyeleri"></div></div>
+    <div class="iq rv">
+      <h3>Daha da küçük: I-quants ve üçlü türler</h3>
+      <p>Bu türler çok düşük bitte kaliteyi korumak için tasarlanmıştır ve genellikle bir <b>önem matrisi</b> (imatrix) ile birlikte kullanılır. KuantLab şimdilik K-quant seviyelerini sunar; aşağıdakiler bilgi içindir.</p>
+      <div class="chips static" id="iqList"></div>
+    </div>
+    <div class="callout rv">
+      <svg class="i"><use href="#i-target"/></svg>
+      <p><b>Pratik kural:</b> Belleğinizin yaklaşık %70'ini aşmayan en büyük seviyeyi seçin. Uzun bağlamlar (KV önbelleği) için ek pay bırakın. 8 GB bellekte 7–8B model için Q4_K_M, 16 GB'ta 14B model için Q4_K_M veya 8B model için Q8_0 mantıklı başlangıçlardır. Kesin sayılar için <a href="#hesapla">hesaplayıcıyı</a> kullanın.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ HESAPLAYICI ============ -->
+<section class="sec calc" id="hesapla" aria-labelledby="calcTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>H</b>ESAPLAYICI)</span>
+      <div>
+        <h2 class="h2 rv" id="calcTitle">Modelim <em>belleğime sığar mı?</em></h2>
+        <p class="lede rv">Model, seviye ve bağlam uzunluğunu seçin; ağırlıklar ile KV önbelleğinin toplam bellek ihtiyacını görün. Hesap, llama.cpp tablosundaki bit/ağırlık değerlerinden yapılır ve gerçek GGUF dosya boyutlarıyla %5'in altında sapma verir; yine de bir tahmindir.</p>
+      </div>
+    </div>
+    <div class="calc-grid rv">
+      <div class="calc-ctl">
+        <label class="flbl" for="calcModel">Model</label>
+        <select id="calcModel" class="sel"></select>
+        <div class="row2">
+          <div>
+            <label class="flbl" for="calcCustom">Özel parametre (milyar)</label>
+            <input id="calcCustom" class="num" type="number" min="0.1" max="1000" step="0.1" inputmode="decimal" placeholder="örn. 8">
+          </div>
+          <div>
+            <label class="flbl" for="calcKv">KV önbelleği</label>
+            <select id="calcKv" class="sel">
+              <option value="2">f16 (varsayılan)</option>
+              <option value="1.0625">q8_0</option>
+              <option value="0.5625">q4_0</option>
+            </select>
+          </div>
+        </div>
+        <span class="flbl">Kuantizasyon seviyesi</span>
+        <div class="chips" id="calcQuant" role="group" aria-label="Seviye"></div>
+        <label class="flbl" for="calcCtx">Bağlam uzunluğu: <b id="calcCtxOut">8.192</b> token</label>
+        <input id="calcCtx" class="range" type="range" min="9" max="17" step="1" value="13">
+        <p class="small" id="calcModelNote"></p>
+      </div>
+      <div class="calc-out">
+        <div class="calc-total"><small>Toplam bellek ihtiyacı</small><b id="calcTotal">—</b><span id="calcVs"></span></div>
+        <div class="stackbar" id="calcBars" aria-hidden="true"></div>
+        <ul class="calc-legend" id="calcLegend"></ul>
+        <div class="devices" id="calcDevices"></div>
+        <p class="small">Cihaz sütunu, belleğin yaklaşık %85'inin kullanılabildiği varsayımıyla işaretlenir. İşletim sistemi, tarayıcı ve diğer uygulamalar payınızı azaltabilir.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ NEDEN ÖNEMLİ / NERELERDE ============ -->
+<section class="sec why" id="onem" aria-labelledby="whyTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>N</b>EDEN ÖNEMLİ?)</span>
+      <div>
+        <h2 class="h2 rv" id="whyTitle">Küçük model, <em>büyük fark</em></h2>
+        <p class="lede rv">Kuantizasyon, yapay zekâyı yalnızca dev veri merkezlerinin değil herkesin kullanabileceği bir teknolojiye dönüştüren en önemli adımlardan biridir.</p>
+      </div>
+    </div>
+    <div class="tiles" id="whyGrid"></div>
+
+    <div class="sec-head sub-head">
+      <span class="lbl rv">(<b>N</b>ERELERDE <b>K</b>ULLANILIR?)</span>
+      <div><h2 class="h2 sm rv">Nerelerde <em>kullanılır?</em></h2></div>
+    </div>
+    <div class="tiles" id="useGrid"></div>
+  </div>
+</section>
+
+<!-- ============ ŞİRKETLER ============ -->
+<section class="sec cos" id="sirketler" aria-labelledby="coTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>Ş</b>İRKETLER)</span>
+      <div>
+        <h2 class="h2 rv" id="coTitle">Kuantizasyonu <em>kimler</em> kullanıyor?</h2>
+        <p class="lede rv">Model üreticilerinden donanım şirketlerine, açık kaynak araçlardan Türkiye'deki kuruluşlara kadar 25 isim. Her kart resmî blog, model kartı, makale veya depo bağlantılarıyla doğrulanmış bilgiler içerir; ayrıntı için karta tıklayın.</p>
+      </div>
+    </div>
+    <div class="toolbar rv">
+      <div class="chips" id="coFilter" role="group" aria-label="Şirket türü"></div>
+      <div class="search"><svg class="i"><use href="#i-search"/></svg><input id="coSearch" type="search" placeholder="Şirket ara…" aria-label="Şirket ara" autocomplete="off"></div>
+    </div>
+    <div class="co-grid" id="coGrid"></div>
+    <p class="empty" id="coEmpty" hidden>Aramanızla eşleşen şirket bulunamadı.</p>
+    <p class="fine rv" id="coAsOf"></p>
+  </div>
+</section>
+
+<!-- ============ TÜRKİYE ============ -->
+<section class="sec tr" id="turkiye" aria-labelledby="trTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>T</b>ÜRKİYE)</span>
+      <div>
+        <h2 class="h2 rv" id="trTitle">Türkçe için <em>kuantizasyon</em></h2>
+        <p class="lede rv">Türkçe gibi daha az temsil edilen dillerde kuantizasyonun etkisi, İngilizcedekinden farklı olabilir. Türkiye'den üç kuruluşun açık modellerine ve kuantize sürümlerine bakın; ardından Türkçe kullanım için pratik öneriler gelir.</p>
+      </div>
+    </div>
+    <div class="co-grid tr-grid" id="trGrid"></div>
+    <div class="callout rv">
+      <svg class="i"><use href="#i-globe"/></svg>
+      <p><b>Türkçe için öneri:</b> Cohere araştırmacılarının çok dilli çalışması, kuantizasyon kaybının İngilizce dışındaki dillerde ve gerçek kullanıcı değerlendirmesinde otomatik metriklerden daha büyük görülebildiğini gösterdi. Bu yüzden Türkçe çıktı kalitesi önemliyse <b>Q5_K_M veya üzerini</b> tercih edin, Q4_K_M ile kendi örnek sorularınızı karşılaştırın ve 3 bit altına yalnızca bellek zorunluysa inin.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ZAMAN ÇİZELGESİ ============ -->
+<section class="sec tl" id="zaman" aria-labelledby="tlTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>Z</b>AMAN ÇİZELGESİ)</span>
+      <div>
+        <h2 class="h2 rv" id="tlTitle">On bir yılın <em>hikâyesi</em></h2>
+        <p class="lede rv">2015'te sinir ağı sıkıştırmasından 2026'da dört bitlik donanım biçimlerine: araştırma, şirket duyuruları ve araçlar birlikte. Her kayıt bir kaynağa bağlanır.</p>
+      </div>
+    </div>
+    <div class="toolbar rv">
+      <div class="chips" id="tlFilter" role="group" aria-label="Kayıt türü"></div>
+      <span class="count" id="tlCount"></span>
+    </div>
+    <ol class="tl-list" id="tlList"></ol>
+  </div>
+</section>
+
+<!-- ============ AÇIK KAYNAK ARAÇLAR ============ -->
+<section class="sec tools" id="araclar" aria-labelledby="toolsTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>A</b>RAÇLAR)</span>
+      <div>
+        <h2 class="h2 rv" id="toolsTitle">16 GB RAM için seçtiğimiz <em>3 açık kaynak</em> araç</h2>
+        <p class="lede rv">Ücretsiz Google Colab ortamı (yaklaşık 12–16 GB RAM) düşünülerek karşılaştırdığımız üç açık kaynak kuantizasyon aracı. Bu sitede <b>llama.cpp</b> kullanılır.</p>
+      </div>
+    </div>
+    <div class="tools3" id="toolsGrid"></div>
+    <div class="callout rv">
+      <svg class="i"><use href="#i-layers"/></svg>
+      <p><b>Neden llama.cpp ve GGUF?</b> GPU şartı olmadan 16 GB RAM'de çalışan seçenek bu; üstelik çıktısı herkesin bilgisayarında (Windows, macOS, Linux) tek dosya olarak çalışıyor. Bu yüzden siteye çalıştırma kodu değil <b>modelin kendisi</b> yüklenir: Hugging Face formatındaki ağırlıklar (<span class="fmt">.safetensors</span> / <span class="fmt">.bin</span> + <span class="fmt">config.json</span> + tokenizer) ya da 16 bitlik bir <span class="fmt">.gguf</span>. Çıktı olarak kuantize edilmiş <span class="fmt">.gguf</span> verilir.</p>
+    </div>
+    <ol class="pipeline rv">
+      <li><b>Model alınır</b><span>Yüklediğiniz dosyalar ya da Hugging Face'ten adıyla indirilen orijinal model sunucuya gelir.</span></li>
+      <li><b>GGUF'a dönüştürülür</b><span><code>convert_hf_to_gguf.py</code> ile 16 bitlik GGUF dosyası oluşturulur.</span></li>
+      <li><b>Kuantize edilir</b><span><code>llama-quantize</code> seçtiğiniz seviyeye (ör. Q4_K_M) indirir.</span></li>
+      <li><b>İndirip kullanın</b><span>Dosyayı LM Studio'ya sürükleyin veya <code>ollama create</code> ile Ollama'ya ekleyin.</span></li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ NASIL KULLANIRIM ============ -->
+<section class="sec use" id="kullan" aria-labelledby="useTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>K</b>ULLANIM)</span>
+      <div>
+        <h2 class="h2 rv" id="useTitle">İndirdiğiniz <em>.gguf</em> dosyasını çalıştırın</h2>
+        <p class="lede rv">Dosya tek parçadır: ağırlıklar, tokenizer ve sohbet şablonu içinde gelir. Aşağıdakilerden birini seçin.</p>
+      </div>
+    </div>
+    <div class="seg wide rv" id="useTabs" role="group" aria-label="Çalıştırma yolu">
+      <button type="button" data-tab="lms" aria-pressed="true">LM Studio</button>
+      <button type="button" data-tab="ollama" aria-pressed="false">Ollama</button>
+      <button type="button" data-tab="cpp" aria-pressed="false">llama.cpp</button>
+      <button type="button" data-tab="py" aria-pressed="false">Python</button>
+      <button type="button" data-tab="self" aria-pressed="false">Kendi sunucunuz</button>
+    </div>
+
+    <div class="tabpane rv" data-pane="lms">
+      <ol class="num-list">
+        <li>LM Studio'yu açın ve <b>My Models</b> bölümüne gidin.</li>
+        <li>İndirdiğiniz <code>.gguf</code> dosyasını LM Studio'nun model klasörüne alın; komut satırından da içe aktarabilirsiniz:</li>
+      </ol>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>lms import ./model-Q4_K_M.gguf</code></pre></div>
+      <p class="small">Model listede görününce sohbet ekranından seçip kullanabilirsiniz. Sohbet şablonu GGUF içinde gelir.</p>
+    </div>
+
+    <div class="tabpane rv" data-pane="ollama" hidden>
+      <p>Ollama, GGUF dosyasını bir <b>Modelfile</b> ile içe aktarır. <code>Modelfile</code> adlı bir dosya oluşturun:</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>FROM ./model-Q4_K_M.gguf</code></pre></div>
+      <p>Ardından modeli oluşturup çalıştırın:</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>ollama create benim-modelim -f Modelfile
+ollama run benim-modelim</code></pre></div>
+      <p class="small">Ollama, GGUF'u içe aktarırken yeniden kuantize etmez; dosyayı olduğu gibi kullanır. Yanıt biçimi bozuk görünürse Modelfile'a modelin sohbet şablonunu <code>TEMPLATE</code> ile ekleyin.</p>
+    </div>
+
+    <div class="tabpane rv" data-pane="cpp" hidden>
+      <p>Tek seferlik sohbet için:</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>llama-cli -m model-Q4_K_M.gguf -p "Merhaba! Kendini tanıtır mısın?" -n 128</code></pre></div>
+      <p>Tarayıcıdan ve OpenAI uyumlu bir arayüzle kullanmak için sunucu başlatın:</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>llama-server -m model-Q4_K_M.gguf --port 8081</code></pre></div>
+      <p>KV önbelleğini küçültmek için (bkz. <a href="#nasil">bölüm 07</a>):</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>llama-server -m model-Q4_K_M.gguf -c 16384 -ctk q8_0 -ctv q8_0 -fa</code></pre></div>
+      <p class="small">V önbelleğini kuantize etmek için çoğu sürümde flash attention (<code>-fa</code>) gerekir.</p>
+    </div>
+
+    <div class="tabpane rv" data-pane="py" hidden>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>pip install llama-cpp-python</code></pre></div>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>from llama_cpp import Llama
+
+llm = Llama(model_path="model-Q4_K_M.gguf", n_ctx=4096)
+yanit = llm.create_chat_completion(
+    messages=[{"role": "user", "content": "Merhaba!"}]
+)
+print(yanit["choices"][0]["message"]["content"])</code></pre></div>
+    </div>
+
+    <div class="tabpane rv" data-pane="self" hidden>
+      <p>KuantLab'ı kendi bilgisayarınızda çalıştırmak için proje klasöründe:</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>./calistir.sh</code></pre></div>
+      <p>Site <b>http://localhost:8080</b> adresinde açılır. Google Colab için depodaki <code>colab/KuantLab_Colab.ipynb</code> defterini açıp hücreleri sırayla çalıştırın. İşlemin kendisini elle yapmak isterseniz:</p>
+      <div class="code"><button class="copy" type="button" aria-label="Kopyala"><svg class="i"><use href="#i-copy"/></svg><span>Kopyala</span></button><pre><code>python convert_hf_to_gguf.py ./model-klasoru --outfile model-F16.gguf --outtype f16
+./llama-quantize model-F16.gguf model-Q4_K_M.gguf Q4_K_M</code></pre></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SSS ============ -->
+<section class="sec faq-sec" id="sss" aria-labelledby="faqTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>S</b>IK <b>S</b>ORULAN <b>S</b>ORULAR)</span>
+      <div>
+        <h2 class="h2 rv" id="faqTitle">Merak <em>edilenler</em></h2>
+      </div>
+    </div>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+</section>
+
+<!-- ============ SÖZLÜK ============ -->
+<section class="sec gloss" id="sozluk" aria-labelledby="glTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>S</b>ÖZLÜK)</span>
+      <div>
+        <h2 class="h2 rv" id="glTitle">Terimler <em>sözlüğü</em></h2>
+        <p class="lede rv">Kuantizasyon yazılarında en sık karşılaşacağınız 25 kavram.</p>
+      </div>
+    </div>
+    <div class="toolbar rv">
+      <div class="search wide"><svg class="i"><use href="#i-search"/></svg><input id="glSearch" type="search" placeholder="Terim ara… (ör. perplexity)" aria-label="Terim ara" autocomplete="off"></div>
+      <span class="count" id="glCount"></span>
+    </div>
+    <dl class="gl-grid" id="glGrid"></dl>
+  </div>
+</section>
+
+<!-- ============ KAYNAKLAR ============ -->
+<section class="sec srcs" id="kaynaklar" aria-labelledby="srcTitle">
+  <div class="wrap">
+    <div class="sec-head">
+      <span class="lbl rv">(<b>K</b>AYNAKLAR)</span>
+      <div>
+        <h2 class="h2 rv" id="srcTitle">Bilgilerin <em>dayanağı</em></h2>
+        <p class="lede rv">Bu sayfadaki sayısal iddialar; makaleler, resmî şirket blogları, model kartları ve açık kaynak depolardan alınmıştır. Aşağıda kullanılan kaynakların listesi var. Bilgiler <b id="srcAsOf"></b> itibarıyla derlenmiştir; hızlı değişen konularda güncel kaynağa bakın.</p>
+      </div>
+    </div>
+    <div class="src-cols" id="srcList"></div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ ALT BİLGİ ============ -->
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-top">
+      <div class="foot-brand">
+        <a class="brand" href="#top"><span class="mark"><svg class="i"><use href="#i-logo"/></svg></span><span class="brand-name">KuantLab</span></a>
+        <p>Açık kaynak dil modellerini ücretsiz kuantize eden, öğreten ve karşılaştıran tek sayfalık bir site. Çıktı: kendi bilgisayarınızda çalışan tek bir <b>.gguf</b> dosyası.</p>
+      </div>
+      <nav class="foot-cols" aria-label="Alt bilgi bağlantıları">
+        <div><b>Araç</b><a href="#basla">Başla</a><a href="#lab">Laboratuvar</a><a href="#hesapla">Hesaplayıcı</a><a href="#kullan">Nasıl kullanırım?</a></div>
+        <div><b>Bilgi</b><a href="#nasil">Nasıl çalışır?</a><a href="#yontemler">Yöntemler</a><a href="#seviyeler">Seviyeler</a><a href="#formatlar">Sayı biçimleri</a></div>
+        <div><b>Sektör</b><a href="#sirketler">Şirketler</a><a href="#turkiye">Türkiye</a><a href="#zaman">Zaman çizelgesi</a><a href="#araclar">Araçlar</a></div>
+        <div><b>Daha fazla</b><a href="#sss">SSS</a><a href="#sozluk">Sözlük</a><a href="#kaynaklar">Kaynaklar</a><a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noopener">llama.cpp ↗</a></div>
+      </nav>
+    </div>
+    <div class="foot-legal">
+      <p><b>Marka bildirimi:</b> Bu sayfada görünen şirket ve ürün adları ile logolar ilgili sahiplerine aittir ve yalnızca ilgili şirketin ya da modelin ne olduğunu belirtmek amacıyla (tanımlayıcı kullanım) gösterilir. KuantLab bu kuruluşlarla bağlantılı değildir ve onlar tarafından desteklenmez ya da onaylanmaz. Logo çizimleri <a href="https://github.com/lobehub/lobe-icons" target="_blank" rel="noopener">LobeHub Icons</a> projesinden alınmıştır.</p>
+      <p><b>Lisans sorumluluğu:</b> Kuantize ettiğiniz modelin lisansına uymak kullanıcının sorumluluğundadır. Kuantize edilmiş model, özgün modelin lisansını taşır.</p>
+      <p class="foot-line"><span>KuantLab · <a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noopener">llama.cpp</a> (MIT) ile güçlendirilmiştir.</span><a href="#top" class="totop">Başa dön ↑</a></p>
+    </div>
+  </div>
+</footer>
+
+<!-- ============ ŞİRKET AYRINTISI ============ -->
+<dialog class="modal" id="coModal" aria-labelledby="coModalTitle">
+  <div class="modal-in" id="coModalBody"></div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+<script src="js/site.js"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+fastapi>=0.110
+uvicorn>=0.29
+huggingface_hub>=0.24
+numpy
+sentencepiece
+protobuf
+transformers
+safetensors
+tqdm
+pyyaml
+requests

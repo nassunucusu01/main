@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>KuantLab · Ücretsiz LLM Kuantizasyonu (GGUF)</title>
+<meta name="description" content="Qwen, Llama, DeepSeek, Mistral, Gemma gibi açık kaynak modelleri ücretsiz olarak GGUF formatında kuantize edin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #03050a;
+    --bg-2: #070b14;
+    --card: rgba(13, 20, 36, 0.72);
+    --card-solid: #0b1222;
+    --line: rgba(80, 130, 255, 0.16);
+    --line-2: rgba(80, 130, 255, 0.32);
+    --blue: #2f6bff;
+    --blue-2: #4f8dff;
+    --blue-3: #8ab4ff;
+    --cyan: #3cc8ff;
+    --text: #eef3ff;
+    --muted: #93a3c4;
+    --danger: #ff6b81;
+    --radius: 18px;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    line-height: 1.6; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -2;
+    background:
+      radial-gradient(900px 600px at 15% -10%, rgba(47, 107, 255, .28), transparent 60%),
+      radial-gradient(800px 500px at 100% 10%, rgba(60, 200, 255, .12), transparent 60%),
+      radial-gradient(900px 700px at 50% 120%, rgba(47, 107, 255, .16), transparent 60%);
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background-image: linear-gradient(rgba(80,130,255,.05) 1px, transparent 1px), linear-gradient(90deg, rgba(80,130,255,.05) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(ellipse at 50% 0%, #000 30%, transparent 75%);
+  }
+  a { color: var(--blue-3); text-decoration: none; }
+  a:hover { color: #fff; }
+  h1, h2, h3 { font-family: "Space Grotesk", Inter, sans-serif; letter-spacing: -0.02em; margin: 0; }
+  code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .wrap { width: min(1120px, 92vw); margin: 0 auto; }
+
+  .i { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  .brand-img { filter: brightness(0) invert(1); }
+
+  /* --- navigasyon --- */
+  nav {
+    position: sticky; top: 0; z-index: 20; backdrop-filter: blur(14px);
+    background: rgba(3, 5, 10, .7); border-bottom: 1px solid var(--line);
+  }
+  nav .wrap { display: flex; align-items: center; justify-content: space-between; height: 64px; }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: "Space Grotesk"; font-weight: 700; font-size: 1.15rem; color: #fff; }
+  .logo-mark { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(135deg, var(--blue), #1b3fae); box-shadow: 0 0 24px rgba(47,107,255,.55); }
+  .logo-mark .i { width: 18px; height: 18px; color: #fff; }
+  .nav-links { display: flex; gap: 26px; font-size: .92rem; }
+  .nav-links a { color: var(--muted); }
+  .nav-links a:hover { color: #fff; }
+  .engine-pill { display: inline-flex; align-items: center; gap: 8px; font-size: .78rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--muted); }
+  .engine-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: #f5b83d; box-shadow: 0 0 10px #f5b83d; }
+  .engine-pill.ready .dot { background: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
+  .engine-pill.err .dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+
+  /* --- karşılama --- */
+  .hero { padding: 88px 0 40px; text-align: center; }
+  .badge { display: inline-flex; gap: 8px; align-items: center; padding: 6px 14px; border-radius: 999px; border: 1px solid var(--line-2); background: rgba(47,107,255,.08); color: var(--blue-3); font-size: .82rem; font-weight: 500; }
+  .hero h1 {
+    font-size: clamp(3rem, 8vw, 5.6rem); margin: 22px 0 12px; line-height: 1.02;
+    background: linear-gradient(180deg, #fff 30%, #9dbcff 100%); -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero h1 span { background: linear-gradient(90deg, var(--blue-2), var(--cyan)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .hero .lead { max-width: 760px; margin: 0 auto; font-size: 1.14rem; color: #c3d0ea; }
+  .hero .lead b { color: #fff; }
+  .stats { display: flex; justify-content: center; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
+  .stat { padding: 14px 20px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); min-width: 170px; }
+  .stat b { display: block; font-family: "Space Grotesk"; font-size: 1.35rem; color: #fff; }
+  .stat span { font-size: .82rem; color: var(--muted); }
+
+  /* --- kart / araç --- */
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 24px; backdrop-filter: blur(12px); }
+  .tool { padding: 36px; margin: 30px auto 0; position: relative; box-shadow: 0 30px 80px -30px rgba(47,107,255,.35); }
+  .tool::before { content: ""; position: absolute; inset: -1px; border-radius: 24px; padding: 1px; background: linear-gradient(135deg, rgba(79,141,255,.6), transparent 40%, transparent 60%, rgba(60,200,255,.4)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+  .tool h2 { font-size: 1.7rem; }
+  .tool .intro { color: #c3d0ea; margin: 10px 0 22px; }
+  .fmt { display: inline-block; padding: 1px 9px; margin: 2px 2px; border-radius: 7px; background: rgba(47,107,255,.14); border: 1px solid var(--line-2); color: #dbe6ff; font-size: .86em; font-family: ui-monospace, Menlo, monospace; white-space: nowrap; }
+
+  .drop {
+    border: 1.5px dashed var(--line-2); border-radius: var(--radius); padding: 30px 22px; text-align: center; cursor: pointer;
+    background: rgba(5, 9, 18, .6); transition: .2s border-color, .2s background, .2s transform;
+  }
+  .drop:hover, .drop.over { border-color: var(--blue-2); background: rgba(47,107,255,.08); }
+  .drop.over { transform: scale(1.01); }
+  .drop .big-ico { width: 54px; height: 54px; border-radius: 16px; margin: 0 auto 12px; display: grid; place-items: center; background: rgba(47,107,255,.14); border: 1px solid var(--line-2); color: #fff; }
+  .drop .big-ico .i { width: 26px; height: 26px; }
+  .drop p { margin: 4px 0; color: var(--muted); font-size: .92rem; }
+  .drop p strong { color: #fff; font-weight: 600; }
+  .attach {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 10px; cursor: pointer;
+    border: 1px solid var(--line-2); background: rgba(255,255,255,.04); color: #fff; font: inherit; font-size: .88rem; transition: .2s;
+  }
+  .attach:hover { background: rgba(47,107,255,.2); border-color: var(--blue-2); }
+  .attach .plus { width: 22px; height: 22px; border-radius: 7px; display: grid; place-items: center; background: var(--blue); }
+  .attach .plus .i { width: 14px; height: 14px; stroke-width: 2.6; }
+  .files { list-style: none; margin: 14px 0 0; padding: 0; display: grid; gap: 8px; }
+  .files li { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.03); border: 1px solid var(--line); font-size: .9rem; }
+  .files li .name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .files li .size { color: var(--muted); font-size: .82rem; }
+  .icon-btn { background: none; border: 0; color: var(--muted); cursor: pointer; padding: 4px; border-radius: 8px; display: grid; place-items: center; }
+  .icon-btn:hover { color: #fff; background: rgba(255,255,255,.07); }
+
+  .or { display: flex; align-items: center; gap: 14px; margin: 22px 0; color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing: .12em; }
+  .or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  label.lbl { display: block; font-weight: 600; font-size: .95rem; margin-bottom: 8px; }
+  label.lbl small { font-weight: 400; color: var(--muted); }
+  .input { position: relative; }
+  .input .i { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--muted); }
+  .input input {
+    width: 100%; padding: 14px 14px 14px 44px; border-radius: 14px; border: 1px solid var(--line-2); background: rgba(5,9,18,.75);
+    color: #fff; font: inherit; font-size: .98rem; outline: none; transition: .2s;
+  }
+  .input input:focus { border-color: var(--blue-2); box-shadow: 0 0 0 4px rgba(47,107,255,.18); }
+  .input input::placeholder { color: #5d6b88; }
+  .preview { margin-top: 10px; min-height: 26px; display: flex; align-items: center; gap: 10px; font-size: .9rem; color: var(--muted); }
+  .preview img { width: 22px; height: 22px; }
+  .preview b { color: #fff; font-weight: 600; }
+  .preview.err { color: var(--danger); }
+  .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.2); border-top-color: #fff; border-radius: 50%; animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .quants { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 8px; }
+  .q { text-align: left; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255,255,255,.02); color: var(--text); cursor: pointer; font: inherit; transition: .18s; position: relative; }
+  .q:hover { border-color: var(--line-2); }
+  .q b { display: block; font-family: ui-monospace, Menlo, monospace; font-size: .95rem; }
+  .q span { display: block; font-size: .76rem; color: var(--muted); line-height: 1.35; margin-top: 3px; }
+  .q.active { border-color: var(--blue-2); background: rgba(47,107,255,.14); box-shadow: 0 0 0 3px rgba(47,107,255,.15); }
+  .q .rec { position: absolute; top: -9px; right: 10px; font-size: .66rem; padding: 1px 8px; border-radius: 999px; background: var(--blue); color: #fff; font-weight: 600; }
+  details.adv { margin-top: 18px; color: var(--muted); font-size: .9rem; }
+  details.adv summary { cursor: pointer; }
+  details.adv .input { margin-top: 10px; }
+  .row-gap { margin-top: 26px; }
+
+  .start {
+    margin-top: 28px; width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+    padding: 17px 24px; border-radius: 16px; border: 0; cursor: pointer; color: #fff; font: inherit; font-weight: 700; font-size: 1.12rem;
+    font-family: "Space Grotesk", Inter, sans-serif; letter-spacing: .01em;
+    background: linear-gradient(135deg, #3a76ff 0%, #2353e0 55%, #1636a8 100%);
+    box-shadow: 0 12px 40px -10px rgba(47,107,255,.8), inset 0 1px 0 rgba(255,255,255,.25); transition: .2s transform, .2s box-shadow, .2s opacity;
+    position: relative; overflow: hidden;
+  }
+  .start::after { content: ""; position: absolute; inset: 0; background: linear-gradient(120deg, transparent 30%, rgba(255,255,255,.25) 50%, transparent 70%); transform: translateX(-100%); transition: .7s transform; }
+  .start:hover::after { transform: translateX(100%); }
+  .start:hover { transform: translateY(-2px); box-shadow: 0 18px 50px -10px rgba(47,107,255,.95), inset 0 1px 0 rgba(255,255,255,.25); }
+  .start:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+  .start .i { width: 22px; height: 22px; }
+  .hint { margin-top: 10px; font-size: .84rem; color: var(--muted); text-align: center; min-height: 1.3em; }
+  .hint.err { color: var(--danger); }
+
+  /* --- iş paneli --- */
+  .job { display: none; margin-top: 28px; padding: 24px; border-radius: var(--radius); background: rgba(3,6,14,.85); border: 1px solid var(--line-2); animation: rise .45s ease; }
+  .job.show { display: block; }
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .job-head { display: flex; align-items: center; gap: 14px; }
+  .logo-slot { width: 46px; height: 46px; border-radius: 13px; flex: none; display: grid; place-items: center; }
+  .logo-slot.has { background: rgba(47,107,255,.14); border: 1px solid var(--line-2); }
+  .logo-slot img { width: 26px; height: 26px; }
+  .job-title { flex: 1; min-width: 0; }
+  .job-name { font-family: "Space Grotesk"; font-weight: 600; font-size: 1.15rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .job-sub { font-size: .82rem; color: var(--muted); }
+  .bar-row { display: flex; align-items: center; gap: 16px; margin-top: 20px; }
+  .bar { flex: 1; height: 14px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid var(--line); overflow: hidden; position: relative; }
+  .fill {
+    height: 100%; width: 0%; border-radius: 999px; position: relative; transition: width .6s cubic-bezier(.2,.8,.2,1);
+    background: linear-gradient(90deg, #1b45d6, #2f6bff 60%, #5b9bff);
+    box-shadow: 0 0 18px rgba(47,107,255,.75);
+  }
+  .fill::after {
+    content: ""; position: absolute; inset: 0; border-radius: inherit;
+    background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,.18) 0 10px, transparent 10px 20px);
+    background-size: 28px 28px; animation: flow 0.9s linear infinite;
+  }
+  .fill::before {
+    content: ""; position: absolute; top: 0; bottom: 0; width: 40%; border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); animation: sweep 1.8s ease-in-out infinite;
+  }
+  @keyframes flow { to { background-position: 28px 0; } }
+  @keyframes sweep { from { left: -40%; } to { left: 100%; } }
+  .job.finished .fill::after, .job.finished .fill::before, .job.failed .fill::after, .job.failed .fill::before { animation: none; display: none; }
+  .job.failed .fill { background: linear-gradient(90deg, #5a2233, #a3364e); box-shadow: none; }
+  .pct { font-family: "Space Grotesk"; font-weight: 700; font-size: 1.35rem; min-width: 66px; text-align: right; font-variant-numeric: tabular-nums; }
+  .job-meta { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-top: 12px; font-size: .88rem; color: var(--muted); }
+  .job-meta .stage { color: #d6e2ff; display: flex; align-items: center; gap: 8px; }
+  .job-meta .eta { font-variant-numeric: tabular-nums; }
+  .job-err { display: none; margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: rgba(255,107,129,.08); border: 1px solid rgba(255,107,129,.35); color: #ffd0d8; font-size: .9rem; word-break: break-word; }
+  .job.failed .job-err { display: block; }
+
+  .done { display: none; text-align: center; margin-top: 22px; }
+  .job.finished .done { display: block; }
+  .check-wrap { position: relative; width: 92px; height: 92px; margin: 4px auto 10px; }
+  .check-wrap .ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--blue-2); opacity: 0; }
+  .job.finished .ring { animation: ripple 1.6s ease-out .25s 2; }
+  .job.finished .ring.r2 { animation-delay: .65s; }
+  @keyframes ripple { 0% { transform: scale(.7); opacity: .9; } 100% { transform: scale(1.9); opacity: 0; } }
+  .check-wrap svg { width: 92px; height: 92px; }
+  .check-wrap circle { fill: rgba(47,107,255,.16); stroke: var(--blue-2); stroke-width: 2.5; stroke-dasharray: 260; stroke-dashoffset: 260; }
+  .check-wrap path { fill: none; stroke: #fff; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 60; stroke-dashoffset: 60; }
+  .job.finished .check-wrap circle { animation: draw .7s ease forwards; }
+  .job.finished .check-wrap path { animation: draw .45s ease .55s forwards; }
+  @keyframes draw { to { stroke-dashoffset: 0; } }
+  .done h3 { font-size: 1.6rem; opacity: 0; }
+  .done .meta { color: var(--muted); font-size: .9rem; margin: 4px 0 18px; opacity: 0; }
+  .job.finished .done h3, .job.finished .done .meta, .job.finished .dl, .job.finished .again { animation: fadeUp .5s ease .9s forwards; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .dl { opacity: 0; display: inline-flex; align-items: center; gap: 10px; padding: 14px 30px; border-radius: 14px; border: 0; cursor: pointer; font: inherit; font-weight: 700; font-size: 1.05rem; color: #fff;
+    background: linear-gradient(135deg, #3a76ff, #1d47c9); box-shadow: 0 12px 34px -10px rgba(47,107,255,.85); transition: .2s; }
+  .dl:hover { transform: translateY(-2px); }
+  .dl:disabled { opacity: .6 !important; cursor: progress; }
+  .again { opacity: 0; display: block; margin: 14px auto 0; background: none; border: 0; color: var(--blue-3); cursor: pointer; font: inherit; font-size: .9rem; }
+  .again:hover { color: #fff; }
+  .retry { margin-top: 12px; }
+
+  /* --- bilgi bölümleri --- */
+  section.info { padding: 90px 0 0; }
+  .eyebrow { color: var(--blue-2); font-weight: 600; font-size: .82rem; letter-spacing: .14em; text-transform: uppercase; }
+  section.info h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); margin: 8px 0 14px; }
+  section.info > .wrap > p.sub { color: #c3d0ea; max-width: 820px; font-size: 1.04rem; }
+  .two { display: grid; grid-template-columns: 1.15fr 1fr; gap: 28px; margin-top: 26px; align-items: start; }
+  .prose p { color: #c3d0ea; margin: 0 0 14px; }
+  .prose b { color: #fff; }
+  .formula { margin-top: 6px; padding: 14px 16px; border-radius: 14px; background: rgba(47,107,255,.08); border: 1px solid var(--line-2); font-family: ui-monospace, Menlo, monospace; font-size: .9rem; color: #dbe6ff; }
+  .mem { padding: 24px; }
+  .mem h3 { font-size: 1.05rem; margin-bottom: 4px; }
+  .mem .note { font-size: .82rem; color: var(--muted); margin-bottom: 16px; }
+  .mrow { display: grid; grid-template-columns: 78px 1fr 64px; gap: 12px; align-items: center; margin: 10px 0; font-size: .86rem; }
+  .mrow .k { font-family: ui-monospace, Menlo, monospace; color: #dbe6ff; }
+  .mrow .v { text-align: right; color: #fff; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .mbar { height: 12px; border-radius: 999px; background: rgba(255,255,255,.05); overflow: hidden; }
+  .mbar div { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #1b45d6, #4f8dff); }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+  .tile { padding: 22px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); transition: .25s; }
+  .tile:hover { border-color: var(--line-2); transform: translateY(-3px); box-shadow: 0 18px 40px -24px rgba(47,107,255,.6); }
+  .tile .ico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: rgba(47,107,255,.14); border: 1px solid var(--line-2); color: #fff; margin-bottom: 14px; }
+  .tile .ico img { width: 22px; height: 22px; }
+  .tile h3 { font-size: 1.08rem; margin-bottom: 6px; }
+  .tile p { margin: 0; color: var(--muted); font-size: .92rem; }
+  .tile p b { color: #dbe6ff; font-weight: 600; }
+
+  .tools3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 28px; }
+  .tcard { padding: 24px; border-radius: 20px; background: var(--card); border: 1px solid var(--line); position: relative; }
+  .tcard.chosen { border-color: var(--blue-2); background: linear-gradient(180deg, rgba(47,107,255,.16), var(--card) 55%); box-shadow: 0 20px 60px -30px rgba(47,107,255,.9); }
+  .tcard .tag { position: absolute; top: 18px; right: 18px; font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--blue); color: #fff; }
+  .tcard .fmtname { font-family: ui-monospace, Menlo, monospace; color: var(--blue-3); font-size: .85rem; }
+  .tcard h3 { font-size: 1.3rem; margin: 4px 0 10px; }
+  .tcard ul { margin: 0; padding-left: 18px; color: #c3d0ea; font-size: .9rem; }
+  .tcard li { margin: 5px 0; }
+  .tcard .lic { margin-top: 14px; font-size: .8rem; color: var(--muted); }
+  .why { margin-top: 18px; padding: 18px 20px; border-radius: 16px; border: 1px solid var(--line-2); background: rgba(47,107,255,.07); color: #c3d0ea; font-size: .95rem; }
+  .why b { color: #fff; }
+
+  table.qt { width: 100%; border-collapse: collapse; margin-top: 24px; font-size: .92rem; overflow: hidden; border-radius: 16px; }
+  table.qt th, table.qt td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+  table.qt th { color: var(--muted); font-weight: 600; font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; background: rgba(47,107,255,.06); }
+  table.qt td:first-child { font-family: ui-monospace, Menlo, monospace; color: #fff; }
+  table.qt tr.hl td { background: rgba(47,107,255,.1); }
+  .tbl-wrap { border: 1px solid var(--line); border-radius: 16px; overflow-x: auto; background: var(--card); margin-top: 24px; }
+  .tbl-wrap table.qt { margin: 0; }
+
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 28px; counter-reset: s; }
+  .step { padding: 22px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); }
+  .step::before { counter-increment: s; content: counter(s); display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--blue); font-weight: 700; margin-bottom: 12px; }
+  .step h3 { font-size: 1rem; margin-bottom: 6px; }
+  .step p { margin: 0; color: var(--muted); font-size: .88rem; }
+  .step code { color: var(--blue-3); font-size: .82rem; }
+
+  footer { margin-top: 100px; padding: 30px 0 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: .85rem; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translate(-50%, 30px); opacity: 0; padding: 12px 18px; border-radius: 12px; background: #0d1730; border: 1px solid var(--line-2); color: #fff; font-size: .9rem; transition: .3s; z-index: 50; max-width: 90vw; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 900px) {
+    .nav-links { display: none; }
+    .two, .grid, .tools3 { grid-template-columns: 1fr; }
+    .steps { grid-template-columns: 1fr 1fr; }
+    .tool { padding: 22px; }
+  }
+  @media (max-width: 520px) { .steps { grid-template-columns: 1fr; } .pct { font-size: 1.1rem; min-width: 54px; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chip" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2M15 20v2M2 15h2M2 9h2M20 15h2M20 9h2M9 2v2M9 20v2"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></symbol>
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/></symbol>
+  <symbol id="i-db" viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></symbol>
+  <symbol id="i-zap" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></symbol>
+  <symbol id="i-coin" viewBox="0 0 24 24"><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/><path d="M7 6h1v4"/><path d="m16.71 13.88.7.71-2.82 2.82"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></symbol>
+  <symbol id="i-phone" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></symbol>
+  <symbol id="i-laptop" viewBox="0 0 24 24"><path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/></symbol>
+  <symbol id="i-server" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><path d="M6 6h.01M6 18h.01"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
+  <symbol id="i-layers" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/></symbol>
+</svg>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="#"><span class="logo-mark"><svg class="i"><use href="#i-chip"/></svg></span>KuantLab</a>
+    <div class="nav-links">
+      <a href="#basla">Başla</a>
+      <a href="#nedir">Kuantizasyon nedir?</a>
+      <a href="#onem">Neden önemli?</a>
+      <a href="#sirketler">Kimler kullanıyor?</a>
+      <a href="#araclar">Araçlar</a>
+    </div>
+    <span class="engine-pill" id="engine"><span class="dot"></span><span id="engineText">Sunucu kontrol ediliyor…</span></span>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <span class="badge"><svg class="i" style="width:15px;height:15px"><use href="#i-zap"/></svg>Ücretsiz · Açık kaynak · GGUF çıktısı</span>
+  <h1>Hoş <span>Geldiniz</span></h1>
+  <p class="lead">KuantLab; <b>Qwen, Llama, DeepSeek, Mistral, Gemma</b> gibi açık kaynak dil modellerini <b>kuantizasyon (nicemleme)</b> ile küçültür ve kendi bilgisayarınızda çalıştırabileceğiniz tek bir <b>.gguf</b> dosyasına dönüştürür. Dosyanızı yükleyin ya da modelin adını yazın, gerisini biz halledelim.</p>
+  <div class="stats">
+    <div class="stat"><b>16 bit → 4 bit</b><span>ağırlık hassasiyeti</span></div>
+    <div class="stat"><b>~%70 daha küçük</b><span>disk ve bellek kullanımı</span></div>
+    <div class="stat"><b>Ollama · LM Studio</b><span>ile doğrudan uyumlu</span></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="card tool" id="basla">
+      <h2>Kuantizasyon için modelinizi yükleyin</h2>
+      <p class="intro">Kuantizasyon için modelinizin lütfen
+        <span class="fmt">.safetensors</span><span class="fmt">.bin (PyTorch)</span><span class="fmt">.gguf (F16 / BF16 / F32)</span>
+        formatındaki dosyasını — ya da model klasörünü içeren <span class="fmt">.zip</span><span class="fmt">.tar.gz</span> arşivini — buraya sürükleyin, yapıştırın veya seçin.
+        Klasör halinde yüklüyorsanız <span class="fmt">config.json</span> ve tokenizer dosyalarını da ekleyin.</p>
+
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Dosya seç">
+        <div class="big-ico"><svg class="i"><use href="#i-upload"/></svg></div>
+        <p><strong>Dosyanızı buraya bırakın</strong> veya <strong>Ctrl / ⌘ + V</strong> ile yapıştırın</p>
+        <p>Desteklenen: .safetensors · .bin · .gguf · .zip · .tar.gz · .json · .model</p>
+        <button class="attach" type="button" id="attachBtn"><span class="plus"><svg class="i"><use href="#i-plus"/></svg></span>Dosya ekle</button>
+        <input type="file" id="fileInput" multiple hidden
+               accept=".gguf,.safetensors,.bin,.json,.model,.txt,.tiktoken,.jinja,.zip,.tar,.gz,.tgz">
+      </div>
+      <ul class="files" id="fileList"></ul>
+
+      <div class="or">veya</div>
+
+      <label class="lbl" for="modelInput">Model adını yazın <small>— model Hugging Face'ten otomatik getirilir ve GGUF olarak verilir</small></label>
+      <div class="input">
+        <svg class="i"><use href="#i-search"/></svg>
+        <input id="modelInput" type="text" autocomplete="off" spellcheck="false"
+               placeholder="örn. Qwen/Qwen2.5-1.5B-Instruct  ·  deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B">
+      </div>
+      <div class="preview" id="preview"></div>
+
+      <div class="row-gap">
+        <label class="lbl">Kuantizasyon seviyesi <small>— bit sayısı azaldıkça dosya küçülür, kalite biraz düşer</small></label>
+        <div class="quants" id="quants"></div>
+      </div>
+
+      <details class="adv">
+        <summary>Gelişmiş: Erişim izni gerektiren modeller (ör. Meta Llama) için Hugging Face token</summary>
+        <div class="input">
+          <svg class="i"><use href="#i-key"/></svg>
+          <input id="tokenInput" type="password" autocomplete="off" placeholder="hf_xxx… (yalnızca bu işlem için kullanılır, saklanmaz)">
+        </div>
+      </details>
+
+      <button class="start" id="startBtn" type="button">Let's Start <svg class="i"><use href="#i-arrow"/></svg></button>
+      <div class="hint" id="hint"></div>
+
+      <div class="job" id="job" aria-live="polite">
+        <div class="job-head">
+          <div class="logo-slot" id="jobLogo"></div>
+          <div class="job-title">
+            <div class="job-name" id="jobName">—</div>
+            <div class="job-sub" id="jobSub">GGUF</div>
+          </div>
+        </div>
+        <div class="bar-row">
+          <div class="bar"><div class="fill" id="fill"></div></div>
+          <div class="pct" id="pct">0%</div>
+        </div>
+        <div class="job-meta">
+          <span class="stage" id="stage">Başlatılıyor…</span>
+          <span class="eta" id="eta"></span>
+        </div>
+        <div class="job-err" id="jobErr"></div>
+        <button class="again retry" id="retryBtn" type="button" style="display:none;opacity:1">Tekrar dene</button>
+        <div class="done">
+          <div class="check-wrap">
+            <span class="ring"></span><span class="ring r2"></span>
+            <svg viewBox="0 0 92 92"><circle cx="46" cy="46" r="41"/><path d="M28 47 l12 12 l24 -26"/></svg>
+          </div>
+          <h3>İşlem bitti!</h3>
+          <div class="meta" id="doneMeta"></div>
+          <button class="dl" id="dlBtn" type="button"><svg class="i"><use href="#i-download"/></svg><span>İndir</span></button>
+          <button class="again" id="againBtn" type="button">Yeni bir model kuantize et</button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="info" id="nedir">
+    <div class="wrap">
+      <div class="eyebrow">Temel kavram</div>
+      <h2>Kuantizasyon (Nicemleme) Nedir?</h2>
+      <p class="sub">İngilizcesi <b>quantization</b>'dır; Türkçede <b>kuantizasyon</b>, <b>nicemleme</b> ya da <b>kuantalama</b> olarak geçer. Bir yapay zekâ modelindeki sayıları daha az bitle saklayarak modeli küçültme ve hızlandırma tekniğidir.</p>
+      <div class="two">
+        <div class="prose">
+          <p>Bir büyük dil modeli (LLM), milyarlarca sayıdan — <b>ağırlık</b> ya da <b>parametre</b> denir — oluşur. Eğitimden çıkan modeller bu sayıları genellikle <b>16 bitlik kayan noktalı</b> (FP16 / BF16) biçimde saklar; yani her parametre 2 bayt yer kaplar. 7 milyar parametreli bir model bu yüzden yaklaşık <b>14 GB</b> eder ve çoğu bilgisayarın belleğine sığmaz.</p>
+          <p>Kuantizasyon, bu sayıları <b>8, 6, 5, 4 hatta 2 bitlik</b> tam sayılarla temsil eder. Ağırlıklar küçük bloklara (ör. 32 veya 256'lık) ayrılır; her blok için bir <b>ölçek katsayısı</b> tutulur ve değerler bu ölçeğe göre yuvarlanır. Modern <b>K-quant</b> yöntemleri, kaliteye en çok etki eden katmanlara daha fazla bit ayırarak kaybı en aza indirir.</p>
+          <p>Bunu bir fotoğrafı RAW yerine iyi ayarlanmış JPEG olarak kaydetmeye benzetebilirsiniz: dosya birkaç kat küçülür, fark ise çoğu zaman gözle zor seçilir.</p>
+          <div class="formula">Gereken bellek ≈ parametre sayısı × bit sayısı ÷ 8<br>7B × 16 bit ÷ 8 ≈ 14 GB  →  7B × 4,9 bit ÷ 8 ≈ 4,3 GB</div>
+        </div>
+        <div class="card mem">
+          <h3>7 milyar parametreli bir model ne kadar yer kaplar?</h3>
+          <div class="note">Yaklaşık değerler (yalnızca model ağırlıkları)</div>
+          <div class="mrow"><span class="k">FP32</span><div class="mbar"><div style="width:100%"></div></div><span class="v">28 GB</span></div>
+          <div class="mrow"><span class="k">FP16</span><div class="mbar"><div style="width:50%"></div></div><span class="v">14 GB</span></div>
+          <div class="mrow"><span class="k">Q8_0</span><div class="mbar"><div style="width:26.5%"></div></div><span class="v">7,4 GB</span></div>
+          <div class="mrow"><span class="k">Q5_K_M</span><div class="mbar"><div style="width:17.8%"></div></div><span class="v">5,0 GB</span></div>
+          <div class="mrow"><span class="k">Q4_K_M</span><div class="mbar"><div style="width:15.3%"></div></div><span class="v">4,3 GB</span></div>
+          <div class="mrow"><span class="k">Q2_K</span><div class="mbar"><div style="width:9.4%"></div></div><span class="v">2,6 GB</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="info" id="onem">
+    <div class="wrap">
+      <div class="eyebrow">Neden önemli?</div>
+      <h2>Küçük model, büyük fark</h2>
+      <p class="sub">Kuantizasyon, yapay zekâyı yalnızca dev veri merkezlerinin değil, herkesin kullanabileceği bir teknolojiye dönüştüren en önemli adımlardan biridir.</p>
+      <div class="grid">
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-db"/></svg></div><h3>3–4 kat daha az bellek</h3><p>8 milyar parametreli bir model 16 GB'tan yaklaşık <b>5 GB</b>'a iner; sıradan bir dizüstü bilgisayarda veya 8 GB'lık bir ekran kartında çalışabilir.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-zap"/></svg></div><h3>Daha hızlı yanıt</h3><p>Dil modellerinde hız çoğunlukla <b>bellek bant genişliğiyle</b> sınırlıdır. Okunacak bayt azaldıkça saniyede üretilen kelime (token) sayısı artar.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-coin"/></svg></div><h3>Düşük maliyet ve enerji</h3><p>Aynı GPU'ya daha büyük bir model ya da daha fazla kullanıcı sığar. Bulut faturası ve enerji tüketimi belirgin şekilde düşer.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-shield"/></svg></div><h3>Gizlilik ve çevrimdışı kullanım</h3><p>Model kendi cihazınızda çalıştığı için veriniz dışarı çıkmaz. Hassas veriler ve <b>KVKK</b> uyumu için büyük avantajdır; internet gerekmez.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-phone"/></svg></div><h3>Uç cihazlarda yapay zekâ</h3><p>Telefonlar, Raspberry Pi, NVIDIA Jetson ve araç içi sistemler gibi sınırlı donanımlarda model çalıştırmayı mümkün kılar.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-target"/></svg></div><h3>Kalite kaybı küçüktür</h3><p>8 ve 6 bit neredeyse kayıpsızdır; <b>Q4_K_M</b> çoğu görev için ideal dengedir. 3 bit ve altında kalite gözle görülür biçimde düşer.</p></div>
+      </div>
+
+      <h2 style="margin-top:70px;font-size:clamp(1.5rem,3vw,2rem)">Nerelerde kullanılır?</h2>
+      <div class="grid">
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-laptop"/></svg></div><h3>Bilgisayarda yerel yapay zekâ</h3><p><b>Ollama, LM Studio, Jan, GPT4All</b> gibi uygulamalar modelleri GGUF formatında, llama.cpp ile çalıştırır.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-phone"/></svg></div><h3>Mobil ve cihaz üstü asistanlar</h3><p>Telefonlardaki özetleme, akıllı yanıt, çeviri ve yazım yardımcıları düşük bitli modellerle cihaz üzerinde çalışır.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-server"/></svg></div><h3>Kurumsal sunucular</h3><p><b>vLLM, TensorRT-LLM, SGLang</b> gibi sunucu motorları FP8 / INT4 modellerle aynı donanımda daha çok kullanıcıya hizmet verir.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-sliders"/></svg></div><h3>İnce ayar (fine-tuning)</h3><p><b>QLoRA</b> yöntemi 4 bitlik bir model üzerinde eğitim yaparak büyük modelleri tek bir GPU'da özelleştirmeyi mümkün kılar.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-code"/></svg></div><h3>Kod asistanları ve RAG</h3><p>Şirket içi belgelerle çalışan sohbet botları ve kod tamamlama araçları, verileri dışarı göndermeden yerelde çalışır.</p></div>
+        <div class="tile"><div class="ico"><svg class="i"><use href="#i-chip"/></svg></div><h3>Gömülü sistemler ve IoT</h3><p>Robotik, akıllı kameralar ve otomotiv gibi düşük güçlü donanımlarda NPU'lar INT8 / INT4 modelleri verimli işler.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="info" id="sirketler">
+    <div class="wrap">
+      <div class="eyebrow">Sektörde kuantizasyon</div>
+      <h2>Hangi şirketler kullanıyor?</h2>
+      <p class="sub">Dünyanın en büyük teknoloji şirketleri, modellerini milyonlarca cihaza ve kullanıcıya ulaştırmak için kuantizasyonu ürünlerinin merkezine koyuyor.</p>
+      <div class="grid">
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/apple.svg"></div><h3>Apple</h3><p>Apple Intelligence'ın cihaz üstü dil modeli, iPhone ve Mac'te çalışabilmek için ağırlıkları <b>ortalama 2–4 bit</b> seviyesine sıkıştırır.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/google.svg"></div><h3>Google</h3><p>Gemma modelleri için <b>kuantizasyona duyarlı eğitim (QAT)</b> ile int4 sürümler yayınladı; Gemini Nano, Android telefonlarda nicemlenmiş olarak çalışır.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/meta.svg"></div><h3>Meta</h3><p>Llama 3.2 1B ve 3B modellerinin telefonlarda çalışan <b>resmi kuantize sürümlerini</b> (SpinQuant, QLoRA) yayınladı.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/microsoft.svg"></div><h3>Microsoft</h3><p>Copilot+ PC'lerdeki <b>Phi Silica</b> modeli NPU üzerinde 4 bit çalışır; ONNX Runtime ile INT4 modeller dağıtılır.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/nvidia.svg"></div><h3>NVIDIA</h3><p>TensorRT-LLM ve Model Optimizer ile FP8 / INT4 desteği sunar; Blackwell GPU'larda donanım seviyesinde <b>FP4</b> hesaplama vardır.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/openai.svg"></div><h3>OpenAI</h3><p>Açık ağırlıklı <b>gpt-oss</b> modellerini 4 bitlik <b>MXFP4</b> formatında yayınladı; küçük sürüm 16 GB bellekte çalışabiliyor.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/deepseek.svg"></div><h3>DeepSeek</h3><p>DeepSeek-V3'ü <b>FP8 karışık hassasiyetle</b> eğiterek eğitim maliyetini ciddi oranda düşürdü; toplulukta GGUF sürümleri çok popüler.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/huggingface.svg"></div><h3>Hugging Face</h3><p>On binlerce GGUF, GPTQ ve AWQ modeline ev sahipliği yapar; Transformers kütüphanesinde bitsandbytes ile tek satırda 4 bit yükleme sunar.</p></div>
+        <div class="tile"><div class="ico"><img class="brand-img" alt="" src="https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/ollama.svg"></div><h3>Ollama · LM Studio</h3><p>Milyonlarca kullanıcıya ulaşan bu uygulamalar, modelleri varsayılan olarak <b>Q4_K_M</b> gibi GGUF kuantizasyonlarıyla dağıtır.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="info" id="araclar">
+    <div class="wrap">
+      <div class="eyebrow">Açık kaynak araçlar</div>
+      <h2>16 GB RAM için seçtiğimiz 3 kuantizasyon aracı</h2>
+      <p class="sub">Ücretsiz Google Colab ortamı (yaklaşık 12–16 GB RAM, ~80 GB disk) göz önüne alınarak karşılaştırdığımız üç açık kaynak araç:</p>
+      <div class="tools3">
+        <div class="tcard chosen">
+          <span class="tag">BU SİTEDE KULLANILIYOR</span>
+          <div class="fmtname">Çıktı: .gguf</div>
+          <h3>llama.cpp</h3>
+          <ul>
+            <li>Kuantizasyonu <b>işlemciyle (CPU)</b> yapar, GPU gerekmez.</li>
+            <li>Dosyayı akış halinde işler; 16 GB RAM ile ~14B parametreye kadar modeller rahatça işlenir.</li>
+            <li>Çıktı tek bir dosyadır: ağırlıklar + tokenizer + sohbet şablonu.</li>
+            <li>Ollama, LM Studio, Jan, GPT4All ile doğrudan çalışır.</li>
+          </ul>
+          <div class="lic">ggml-org/llama.cpp · MIT lisansı</div>
+        </div>
+        <div class="tcard">
+          <div class="fmtname">Çıktı: GPTQ (safetensors)</div>
+          <h3>GPTQModel</h3>
+          <ul>
+            <li>AutoGPTQ'nun devamı olan, aktif geliştirilen kütüphane.</li>
+            <li>Kalibrasyon verisiyle 4 / 8 bit kuantizasyon; doğruluğu yüksek.</li>
+            <li><b>NVIDIA GPU gerektirir</b> (Colab T4 ile ~7B'ye kadar).</li>
+            <li>vLLM, SGLang ve Transformers ile sunucu tarafında servis için ideal.</li>
+          </ul>
+          <div class="lic">ModelCloud/GPTQModel · Apache 2.0</div>
+        </div>
+        <div class="tcard">
+          <div class="fmtname">Çıktı: NF4 / INT8 (yükleme anında)</div>
+          <h3>bitsandbytes</h3>
+          <ul>
+            <li>Hugging Face Transformers'a gömülüdür; model yüklenirken anında 4 / 8 bite çevirir.</li>
+            <li><b>QLoRA</b> ince ayar yönteminin temelidir.</li>
+            <li>Taşınabilir bir dosya üretmekten çok eğitim ve deney içindir.</li>
+            <li>Çoğunlukla NVIDIA GPU ile çalışır.</li>
+          </ul>
+          <div class="lic">bitsandbytes-foundation/bitsandbytes · MIT</div>
+        </div>
+      </div>
+      <div class="why"><b>Neden llama.cpp ve GGUF?</b> GPU şartı olmadan 16 GB RAM'de çalışan tek seçenek bu; ayrıca çıktısı herkesin bilgisayarında (Windows, macOS, Linux) tek dosya olarak çalışıyor. Bu yüzden siteye <b>GitHub'dan çalıştırma kodu değil, modelin kendisi</b> yüklenir: Hugging Face formatındaki ağırlıklar (<span class="fmt">.safetensors</span> / <span class="fmt">.bin</span> + <span class="fmt">config.json</span> + tokenizer) ya da 16 bitlik bir <span class="fmt">.gguf</span>. Çıktı olarak kuantize edilmiş <span class="fmt">.gguf</span> dosyası verilir.</div>
+
+      <h2 style="margin-top:70px;font-size:clamp(1.5rem,3vw,2rem)">Hangi seviyeyi seçmeliyim?</h2>
+      <div class="tbl-wrap">
+        <table class="qt">
+          <thead><tr><th>Seviye</th><th>Bit / ağırlık</th><th>7B model boyutu</th><th>Ne zaman?</th></tr></thead>
+          <tbody>
+            <tr><td>Q2_K</td><td>~3,0</td><td>~2,6 GB</td><td>Çok kısıtlı donanım; kalite belirgin şekilde düşer</td></tr>
+            <tr><td>Q3_K_M</td><td>~3,9</td><td>~3,4 GB</td><td>Düşük RAM'li cihazlar</td></tr>
+            <tr class="hl"><td>Q4_K_M</td><td>~4,9</td><td>~4,3 GB</td><td><b>Önerilen</b> — boyut ve kalitenin en iyi dengesi</td></tr>
+            <tr><td>Q5_K_M</td><td>~5,7</td><td>~5,0 GB</td><td>Yeterli bellek varsa daha yüksek kalite</td></tr>
+            <tr><td>Q6_K</td><td>~6,6</td><td>~5,8 GB</td><td>Orijinalden ayırt etmek çok zor</td></tr>
+            <tr><td>Q8_0</td><td>~8,5</td><td>~7,4 GB</td><td>Neredeyse kayıpsız; en büyük dosya</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2 style="margin-top:70px;font-size:clamp(1.5rem,3vw,2rem)">Nasıl çalışır?</h2>
+      <div class="steps">
+        <div class="step"><h3>Model alınır</h3><p>Yüklediğiniz dosyalar ya da Hugging Face'ten adıyla indirilen orijinal model sunucuya gelir.</p></div>
+        <div class="step"><h3>GGUF'a dönüştürülür</h3><p><code>convert_hf_to_gguf.py</code> ile 16 bitlik GGUF dosyası oluşturulur.</p></div>
+        <div class="step"><h3>Kuantize edilir</h3><p><code>llama-quantize</code> seçtiğiniz seviyeye (ör. Q4_K_M) indirir.</p></div>
+        <div class="step"><h3>İndirip kullanın</h3><p>Dosyayı LM Studio'ya sürükleyin veya <code>ollama create</code> ile Ollama'ya ekleyin.</p></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>KuantLab · <a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noopener">llama.cpp</a> (MIT) ile güçlendirilmiştir.</span>
+    <span>Kuantize ettiğiniz modelin lisansına uymak kullanıcının sorumluluğundadır.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const ICON_CDN = "https://unpkg.com/@lobehub/icons-static-svg@1.95.1/icons/";
+  const ALLOWED = [".gguf", ".safetensors", ".bin", ".json", ".model", ".txt", ".tiktoken", ".jinja", ".zip", ".tar", ".tar.gz", ".tgz"];
+  const BRANDS = [
+    ["deepseek", ["deepseek"]], ["qwen", ["qwen", "qwq"]], ["gemma", ["gemma"]],
+    ["mistral", ["mistral", "mixtral", "ministral", "codestral", "devstral", "magistral", "pixtral"]],
+    ["microsoft", ["microsoft", "phi-", "phi2", "phi3", "phi4"]], ["openai", ["openai", "gpt-oss"]],
+    ["nvidia", ["nvidia", "nemotron"]], ["huggingface", ["smollm", "huggingfacetb"]], ["ibm", ["granite"]],
+    ["cohere", ["cohere", "command-r", "aya-"]], ["internlm", ["internlm"]], ["zhipu", ["glm-", "chatglm"]],
+    ["moonshot", ["kimi", "moonshot"]], ["minimax", ["minimax"]], ["baichuan", ["baichuan"]],
+    ["stability", ["stablelm"]], ["ai2", ["olmo", "allenai"]], ["tii", ["falcon"]], ["xai", ["grok"]],
+    ["meta", ["llama", "meta-llama"]],
+  ];
+
+  const $ = (s) => document.querySelector(s);
+  const el = {
+    drop: $("#drop"), fileInput: $("#fileInput"), attach: $("#attachBtn"), fileList: $("#fileList"),
+    model: $("#modelInput"), preview: $("#preview"), quants: $("#quants"), token: $("#tokenInput"),
+    start: $("#startBtn"), hint: $("#hint"), job: $("#job"), jobLogo: $("#jobLogo"), jobName: $("#jobName"),
+    jobSub: $("#jobSub"), fill: $("#fill"), pct: $("#pct"), stage: $("#stage"), eta: $("#eta"),
+    jobErr: $("#jobErr"), doneMeta: $("#doneMeta"), dl: $("#dlBtn"), again: $("#againBtn"), retry: $("#retryBtn"),
+    engine: $("#engine"), engineText: $("#engineText"), toast: $("#toast"),
+  };
+  const state = { files: [], quant: "Q4_K_M", info: null, resolved: null, jobId: null, output: null, busy: false, pollTimer: null };
+
+  const detectBrand = (...hints) => {
+    const t = hints.filter(Boolean).join(" ").toLowerCase();
+    for (const [b, keys] of BRANDS) if (keys.some((k) => t.includes(k))) return b;
+    return null;
+  };
+  const brandImg = (brand, cls = "") => {
+    const img = document.createElement("img");
+    img.alt = ""; img.className = "brand-img " + cls; img.src = ICON_CDN + brand + ".svg";
+    return img;
+  };
+  const fmtSize = (n) => {
+    const u = ["B", "KB", "MB", "GB", "TB"]; let i = 0;
+    while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
+    return (i ? n.toFixed(1) : n) + " " + u[i];
+  };
+  const fmtTime = (s) => {
+    if (s == null || !isFinite(s)) return "hesaplanıyor…";
+    s = Math.max(0, Math.round(s));
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
+    if (h) return `${h} sa ${m} dk`;
+    if (m) return `${m} dk ${sec} sn`;
+    return `${sec} sn`;
+  };
+  const toast = (msg) => {
+    el.toast.textContent = msg; el.toast.classList.add("show");
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.toast.classList.remove("show"), 3800);
+  };
+  const hint = (msg, err = false) => { el.hint.textContent = msg || ""; el.hint.classList.toggle("err", !!err); };
+  const LOCAL_PORT = "8080";
+  const LOCAL_SERVER = `http://localhost:${LOCAL_PORT}`;
+  const isLocalHost = /^(localhost|127\.0\.0\.1)$/.test(location.hostname);
+  let API_BASE = location.protocol === "file:" ? LOCAL_SERVER : "";
+  const apiUrl = (path) => API_BASE + path;
+  const api = async (path, opts = {}) => {
+    const res = await fetch(apiUrl(path), opts);
+    let body = null;
+    try { body = await res.json(); } catch (_) {}
+    if (!res.ok) throw new Error((body && (body.detail || body.error)) || `Sunucu hatası (${res.status})`);
+    return body;
+  };
+
+  // --- motor durumu & seviyeler ---
+  async function loadInfo() {
+    try {
+      const info = await api("/api/info");
+      state.info = info;
+      if (!el.quants.children.length) renderQuants(info.quant_types, info.default_quant);
+      el.engine.classList.toggle("ready", info.engine_ready);
+      el.engine.classList.toggle("err", !!info.engine_error);
+      el.engineText.textContent = info.engine_error ? "Motor hatası" : info.engine_ready ? "Sunucu hazır" : "Motor hazırlanıyor…";
+      if (el.hint.textContent.startsWith("Sunucu kapalı")) hint("");
+      if (!info.engine_ready && !info.engine_error) setTimeout(loadInfo, 3000);
+    } catch (_) {
+      if (!API_BASE && isLocalHost && location.port !== LOCAL_PORT) {
+        API_BASE = LOCAL_SERVER;
+        return loadInfo();
+      }
+      el.engine.classList.add("err"); el.engineText.textContent = "Sunucuya ulaşılamıyor";
+      hint(`Sunucu kapalı olabilir. Terminalde ./calistir.sh komutunu çalıştırıp siteyi ${LOCAL_SERVER} adresinden açın.`, true);
+      setTimeout(loadInfo, 5000);
+    }
+  }
+  function renderQuants(types, def) {
+    state.quant = def;
+    el.quants.innerHTML = "";
+    for (const t of types) {
+      const b = document.createElement("button");
+      b.type = "button"; b.className = "q" + (t.id === def ? " active" : ""); b.dataset.id = t.id;
+      b.innerHTML = `<b></b><span></span>${t.id === def ? '<i class="rec">Önerilen</i>' : ""}`;
+      b.querySelector("b").textContent = t.id; b.querySelector("span").textContent = t.label;
+      b.addEventListener("click", () => {
+        state.quant = t.id;
+        el.quants.querySelectorAll(".q").forEach((x) => x.classList.toggle("active", x === b));
+        renderPreview();
+      });
+      el.quants.appendChild(b);
+    }
+  }
+
+  // --- dosya seçimi ---
+  const allowed = (name) => ALLOWED.some((ext) => name.toLowerCase().endsWith(ext));
+  function addFiles(list) {
+    const arr = [...list];
+    const bad = arr.filter((f) => !allowed(f.name));
+    const good = arr.filter((f) => allowed(f.name));
+    if (bad.length) toast(`Desteklenmeyen dosya: ${bad.map((f) => f.name).join(", ")}`);
+    if (!good.length) return;
+    for (const f of good) {
+      const i = state.files.findIndex((x) => x.name === f.name);
+      if (i >= 0) state.files[i] = f; else state.files.push(f);
+    }
+    if (el.model.value) { el.model.value = ""; state.resolved = null; renderPreview(); }
+    renderFiles();
+  }
+  function renderFiles() {
+    el.fileList.innerHTML = "";
+    for (const f of state.files) {
+      const li = document.createElement("li");
+      li.innerHTML = `<svg class="i"><use href="#i-file"/></svg><span class="name"></span><span class="size"></span>
+        <button class="icon-btn" type="button" aria-label="Kaldır"><svg class="i" style="width:16px;height:16px"><use href="#i-x"/></svg></button>`;
+      li.querySelector(".name").textContent = f.name;
+      li.querySelector(".size").textContent = fmtSize(f.size);
+      li.querySelector("button").addEventListener("click", () => {
+        state.files = state.files.filter((x) => x !== f); renderFiles();
+      });
+      el.fileList.appendChild(li);
+    }
+  }
+  el.attach.addEventListener("click", (e) => { e.stopPropagation(); el.fileInput.click(); });
+  el.drop.addEventListener("click", () => el.fileInput.click());
+  el.drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); el.fileInput.click(); } });
+  el.fileInput.addEventListener("change", () => { addFiles(el.fileInput.files); el.fileInput.value = ""; });
+  ["dragenter", "dragover"].forEach((ev) => el.drop.addEventListener(ev, (e) => { e.preventDefault(); el.drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => el.drop.addEventListener(ev, (e) => { e.preventDefault(); el.drop.classList.remove("over"); }));
+  el.drop.addEventListener("drop", (e) => addFiles(e.dataTransfer.files));
+  window.addEventListener("dragover", (e) => e.preventDefault());
+  window.addEventListener("drop", (e) => e.preventDefault());
+  document.addEventListener("paste", (e) => {
+    if (e.clipboardData && e.clipboardData.files.length) { e.preventDefault(); addFiles(e.clipboardData.files); }
+  });
+
+  // --- model adıyla çözümleme ---
+  let resolveTimer = null, resolveSeq = 0;
+  el.model.addEventListener("input", () => {
+    if (state.files.length && el.model.value.trim()) { state.files = []; renderFiles(); }
+    clearTimeout(resolveTimer);
+    state.resolved = null;
+    const q = el.model.value.trim();
+    if (q.length < 3) { renderPreview(); return; }
+    el.preview.className = "preview"; el.preview.innerHTML = '<span class="spinner"></span> Model aranıyor…';
+    resolveTimer = setTimeout(() => resolveModel(q), 600);
+  });
+  async function resolveModel(q) {
+    const seq = ++resolveSeq;
+    try {
+      const headers = el.token.value.trim() ? { "X-HF-Token": el.token.value.trim() } : {};
+      const r = await api("/api/resolve?q=" + encodeURIComponent(q), { headers });
+      if (seq !== resolveSeq) return;
+      state.resolved = r;
+    } catch (e) {
+      if (seq !== resolveSeq) return;
+      state.resolved = { ok: false, error: e.message };
+    }
+    renderPreview();
+  }
+  function renderPreview() {
+    const r = state.resolved;
+    el.preview.className = "preview"; el.preview.innerHTML = "";
+    if (!r) return;
+    if (!r.ok) { el.preview.classList.add("err"); el.preview.textContent = r.error || "Model bulunamadı"; return; }
+    if (r.brand) {
+      const img = brandImg(r.brand); img.onerror = () => img.remove(); el.preview.appendChild(img);
+    }
+    const b = document.createElement("b"); b.textContent = r.repo_id; el.preview.appendChild(b);
+    const parts = [];
+    if (r.params_b) parts.push(`${r.params_b}B parametre`);
+    parts.push(`indirilecek: ${r.size_h}`);
+    if (r.estimates && r.estimates[state.quant]) parts.push(`${state.quant} çıktısı ≈ ${r.estimates[state.quant]}`);
+    if (r.gated) parts.push("erişim izni gerekir");
+    const s = document.createElement("span"); s.textContent = "· " + parts.join(" · "); el.preview.appendChild(s);
+  }
+
+  // --- iş paneli ---
+  function setJobHeader(name, brand) {
+    el.jobName.textContent = name || "Model";
+    el.jobSub.textContent = `${state.quant} · GGUF`;
+    el.jobLogo.innerHTML = ""; el.jobLogo.classList.remove("has");
+    if (brand) {
+      const img = brandImg(brand);
+      img.onload = () => el.jobLogo.classList.add("has");
+      img.onerror = () => { img.remove(); el.jobLogo.classList.remove("has"); };
+      el.jobLogo.appendChild(img);
+    }
+  }
+  function setProgress(pct, stage, etaSec, etaText) {
+    pct = Math.max(0, Math.min(100, pct || 0));
+    el.fill.style.width = pct + "%";
+    el.pct.textContent = Math.floor(pct) + "%";
+    if (stage) el.stage.textContent = stage;
+    el.eta.textContent = etaText != null ? etaText : "Kalan süre: " + fmtTime(etaSec);
+  }
+  function showJob() {
+    el.job.className = "job show";
+    el.retry.style.display = "none";
+    el.jobErr.textContent = "";
+    el.job.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  function lockForm(lock) {
+    state.busy = lock;
+    el.start.disabled = lock;
+    [el.model, el.token, el.fileInput].forEach((x) => (x.disabled = lock));
+    el.drop.style.pointerEvents = lock ? "none" : "";
+    el.drop.style.opacity = lock ? ".55" : "";
+    el.quants.querySelectorAll(".q").forEach((x) => (x.disabled = lock));
+  }
+  function fail(msg) {
+    el.job.classList.add("failed");
+    el.jobErr.textContent = msg;
+    el.stage.textContent = "İşlem başarısız";
+    el.eta.textContent = "";
+    el.retry.style.display = "block";
+    lockForm(false);
+    localStorage.removeItem("kuantlab.job");
+  }
+  function finish(job) {
+    setProgress(100, "Tamamlandı", 0, job.elapsed_seconds != null ? "Toplam süre: " + fmtTime(job.elapsed_seconds) : "");
+    state.output = job.output;
+    el.doneMeta.textContent = job.output ? `${job.output.filename} · ${job.output.size_h}` : "";
+    setTimeout(() => el.job.classList.add("finished"), 350);
+    lockForm(false);
+  }
+
+  // --- yükleme (parça parça; büyük dosyalar ve tünel limitleri için) ---
+  function putChunk(url, blob, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open("PUT", url);
+      xhr.setRequestHeader("Content-Type", "application/octet-stream");
+      xhr.upload.onprogress = (e) => onProgress(e.loaded);
+      xhr.onload = () => { let b = null; try { b = JSON.parse(xhr.responseText); } catch (_) {} resolve({ status: xhr.status, body: b }); };
+      xhr.onerror = () => reject(new Error("Ağ hatası"));
+      xhr.send(blob);
+    });
+  }
+  async function uploadAll(files) {
+    const { upload_id } = await api("/api/uploads", { method: "POST" });
+    const CH = (state.info && state.info.chunk_bytes) || 32 * 1024 * 1024;
+    const total = files.reduce((a, f) => a + f.size, 0) || 1;
+    let sent = 0;
+    const t0 = performance.now();
+    const report = (bytes) => {
+      const pct = (bytes / total) * 100;
+      const elapsed = (performance.now() - t0) / 1000;
+      const rate = bytes / Math.max(elapsed, 0.001);
+      const eta = bytes > 0 && elapsed > 1.5 ? (total - bytes) / rate : null;
+      setProgress(pct, `Dosyalar sunucuya yükleniyor (${fmtSize(bytes)} / ${fmtSize(total)})`, eta);
+    };
+    for (const f of files) {
+      let offset = 0, tries = 0;
+      do {
+        const end = Math.min(offset + CH, f.size);
+        const url = apiUrl(`/api/uploads/${upload_id}/files/${encodeURIComponent(f.name)}?offset=${offset}&final=${end >= f.size ? 1 : 0}`);
+        try {
+          const r = await putChunk(url, f.slice(offset, end), (loaded) => report(sent + offset + loaded));
+          if (r.status === 409 && r.body && r.body.expected_offset != null) { offset = r.body.expected_offset; continue; }
+          if (r.status >= 400) throw new Error((r.body && (r.body.detail || r.body.error)) || `Yükleme hatası (${r.status})`);
+          offset = end; tries = 0;
+        } catch (e) {
+          if (++tries > 4) throw e;
+          await new Promise((res) => setTimeout(res, 1500 * tries));
+        }
+      } while (offset < f.size);
+      sent += f.size;
+      report(sent);
+    }
+    return upload_id;
+  }
+
+  // --- başlat ---
+  el.start.addEventListener("click", async () => {
+    if (state.busy) return;
+    hint("");
+    const modelQ = el.model.value.trim();
+    if (!state.files.length && !modelQ) { hint("Lütfen bir dosya ekleyin veya model adı yazın.", true); return; }
+    if (!state.files.length && state.resolved && !state.resolved.ok) { hint(state.resolved.error, true); return; }
+
+    lockForm(true);
+    showJob();
+    try {
+      let job;
+      if (state.files.length) {
+        const main = state.files.find((f) => /\.(gguf|zip|tar|tgz|gz)$/i.test(f.name)) || state.files[0];
+        const guess = main.name.replace(/\.(tar\.gz|tgz|zip|tar|gguf|safetensors|bin)$/i, "");
+        setJobHeader(guess, detectBrand(...state.files.map((f) => f.name)));
+        setProgress(0, "Yükleme başlıyor…", null);
+        const upload_id = await uploadAll(state.files);
+        setProgress(100, "Yükleme tamamlandı, kuantizasyon kuyruğa alınıyor…", null, "");
+        job = await api("/api/jobs", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: "upload", upload_id, quant: state.quant }) });
+        el.fill.style.transition = "none"; setProgress(0, null, null); void el.fill.offsetWidth; el.fill.style.transition = "";
+      } else {
+        const r = state.resolved && state.resolved.ok ? state.resolved : null;
+        setJobHeader(r ? r.repo_id : modelQ, r ? r.brand : detectBrand(modelQ));
+        setProgress(0, "Model bilgisi alınıyor…", null);
+        job = await api("/api/jobs", { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ source: "hf", model: r ? r.repo_id : modelQ, quant: state.quant, hf_token: el.token.value.trim() || null }) });
+      }
+      startPolling(job);
+    } catch (e) {
+      fail(e.message || String(e));
+    }
+  });
+
+  function startPolling(job) {
+    state.jobId = job.id;
+    localStorage.setItem("kuantlab.job", JSON.stringify({ id: job.id, quant: job.quant }));
+    state.quant = job.quant;
+    setJobHeader(job.model_name, job.brand);
+    applyJob(job);
+    clearInterval(state.pollTimer);
+    state.pollTimer = setInterval(poll, 1000);
+  }
+  async function poll() {
+    try {
+      const job = await api(`/api/jobs/${state.jobId}`);
+      applyJob(job);
+    } catch (e) {
+      clearInterval(state.pollTimer);
+      fail(e.message);
+    }
+  }
+  function applyJob(job) {
+    if (job.status === "done") { clearInterval(state.pollTimer); finish(job); return; }
+    if (job.status === "error") { clearInterval(state.pollTimer); setProgress(job.progress, null, null, ""); fail(job.error || "Bilinmeyen hata"); return; }
+    let stage = job.stage;
+    if (job.status === "queued" && job.queue_position > 1) stage = `Sırada bekliyor (${job.queue_position}. sıradasınız)`;
+    setProgress(job.progress, stage, job.eta_seconds);
+  }
+
+  // --- indir ---
+  el.dl.addEventListener("click", async () => {
+    if (!state.jobId || !state.output) return;
+    const url = apiUrl(`/api/jobs/${state.jobId}/download`);
+    try {
+      const head = await fetch(url, { method: "HEAD" });
+      if (!head.ok) throw new Error(head.status === 404 ? "Dosya sunucuda bulunamadı (süresi dolmuş olabilir)" : `İndirme başarısız (${head.status})`);
+    } catch (e) {
+      toast(e.message); return;
+    }
+    const a = document.createElement("a");
+    a.href = url; a.download = state.output.filename; document.body.appendChild(a); a.click(); a.remove();
+    toast(`İndirme başladı (${state.output.size_h}). İlerlemeyi tarayıcının indirmeler bölümünden izleyebilirsiniz.`);
+  });
+
+  function reset() {
+    clearInterval(state.pollTimer);
+    localStorage.removeItem("kuantlab.job");
+    state.jobId = null; state.output = null; state.files = []; renderFiles();
+    el.job.className = "job"; el.dl.querySelector("span").textContent = "İndir";
+    setProgress(0, "Başlatılıyor…", null, "");
+    lockForm(false); hint("");
+    document.getElementById("basla").scrollIntoView({ behavior: "smooth" });
+  }
+  el.again.addEventListener("click", reset);
+  el.retry.addEventListener("click", () => { el.job.className = "job"; el.retry.style.display = "none"; lockForm(false); });
+
+  // --- açılış ---
+  loadInfo();
+  try {
+    const saved = JSON.parse(localStorage.getItem("kuantlab.job") || "null");
+    if (saved && saved.id) {
+      api(`/api/jobs/${saved.id}`).then((job) => { showJob(); lockForm(job.status !== "done" && job.status !== "error"); startPolling(job); })
+        .catch(() => localStorage.removeItem("kuantlab.job"));
+    }
+  } catch (_) {}
+})();
+</script>
+</body>
+</html>
